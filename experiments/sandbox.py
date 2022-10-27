@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 from benchopt.datasets import make_correlated_data
 
-from slope.solvers import pgd_slope
-from slope.utils import lambda_sequence
+from src.slope.solvers import pgd_slope
+from src.slope.utils import lambda_sequence
 
 rho = 0.9
 
@@ -39,4 +39,5 @@ plt.xlabel("Time (s)")
 plt.semilogy(out["gaps"], label="cd")
 
 out["gaps"]
-plt.show(block=False)
+plt.show()
+#block=False

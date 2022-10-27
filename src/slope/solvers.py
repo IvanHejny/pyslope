@@ -2,7 +2,7 @@ import numpy as np
 from numpy.linalg import norm
 from scipy import sparse
 
-from slope.utils import dual_norm_slope, prox_slope, sl1_norm
+from src.slope.utils import dual_norm_slope, prox_slope, sl1_norm
 
 
 def pgd_slope(
@@ -52,4 +52,5 @@ def pgd_slope(
         if gap < gap_tol:
             break
 
-    return dict(beta=beta, intercept=intercept, primals=primals, duals=duals, gaps=gaps)
+    #return dict(beta=beta, intercept=intercept, primals=primals, duals=duals, gaps=gaps)
+    return dict(beta=beta, intercept=intercept)
