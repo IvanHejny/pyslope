@@ -64,6 +64,7 @@ def prox_slope(y, lambdas):
     array
         the result of the proximal operator
     """
+    lambdas = np.flip(np.sort(lambdas))
     y_sign = np.sign(y)
     y = np.abs(y)
     ord = np.flip(np.argsort(y))
@@ -117,8 +118,7 @@ def prox_slope_isotonic(y, lambdas):
     array
         the result of the proximal operator
     """
-    #beta_sign = np.sign(beta)
-    #beta = np.abs(beta)
+    lambdas = np.flip(np.sort(lambdas))
     ord = np.flip(np.argsort(y))
     y = y[ord]
 
@@ -199,7 +199,7 @@ b_0 = np.array([2, 2, -2, -2])
 #y_4 = np.array([60.0, 50.0, 10.0, -5.0, -7.0])
 #lambdas_4 = np.array([65.0, 40.0, 25.0, 5.0, 1.0])
 
-#print("prox_slope:", prox_slope(y_2,lambdas_2))
+print("prox_slope:", prox_slope(y_3,lambdas_3))
 
 print("prox_slope_isotonic:", prox_slope_isotonic(y_3, lambdas_3))
 print("prox_slope_isotonic:", prox_slope_isotonic(y_3s, lambdas_3))#reshuffling y only reshuffles the solution (keeping lambdas fixed)
@@ -331,6 +331,7 @@ def u_reconstruction(b_0, u_partition):
            reconstruction[position] = value
     return reconstruction
 
+"""
 #b_0_test1 = [0, 0, 1, 1, 2, -2, 2]
 lambda_test1 = [7, 6, 5, 4, 3, 2, 1]
 
@@ -342,21 +343,76 @@ print(b_0_test2)
 print(y_test2)
 
 partition_test2 = y_partition_by_b_0(b_0_test2, y_test2)
-print(y_partition_by_b_0(b_0_test2, y_test2))
+print('y_partition_by_b_0:', y_partition_by_b_0(b_0_test2, y_test2))
 
-print(u_reconstruction(b_0_test2, partition_test2))
+print('u_reconstruction:', u_reconstruction(b_0_test2, partition_test2))
 
-print(lambda_test1)
-print(lambda_partition_by_b_0(b_0_test2, lambda_test1))
+print('lambda:', lambda_test1)
+print('lambda_partition_by_b_0:', lambda_partition_by_b_0(b_0_test2, lambda_test1))
+"""
 
 
 b_0_test3 = np.array([0, 2, 0, 2, -2, -2, 1, 1])
-y_test3 = np.array([5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12, 18, 33])
+y_test3 = np.array([5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 18.0])
 lambda_test3 = [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]
 
-def slop_prox_b_0(b_0, y, lambdas):
-    b_0_sign = np.sign(b_0)
-    b_0 = np.abs(b_0)
-    nr_clusters = max(b_0)
-    lambda_partition = lambda_partition_by_b_0(b_0, lambdas)
-    return 3
+print('b_0_test3:', b_0_test3)
+print('y_test3', y_test3)
+
+partition_test3 = y_partition_by_b_0(b_0_test3, y_test3)
+print('y_partition_by_b_0:', y_partition_by_b_0(b_0_test3, y_test3))
+
+print('u_reconstruction:', u_reconstruction(b_0_test3, partition_test3))
+
+print('lambda:', lambda_test3)
+print('lambda_partition_by_b_0:', lambda_partition_by_b_0(b_0_test3, lambda_test3))
+
+
+def slope_prox_b_0(b_0, y, lambdas):
+    # b_0 = [0, 2, 0, 2, -2, -2, 1, 1]
+    # y = [5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 18.0]
+    # lambdas = [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]
+
+    nr_clusters = max(np.abs(b_0))  # 2
+    y_partition = y_partition_by_b_0(b_0, y)  # [[5.0, 4.0], [12.0, 18.0], [60.0, 50.0, 10.0, -5.0]]
+    lambda_partition = lambda_partition_by_b_0(b_0, lambdas)  # [[1.0, 3.0], [15.0, 18.0], [20.0, 40.0, 42.0, 65.0]]
+    b_0_partition = y_partition_by_b_0(b_0, b_0)
+    prox_0_cluster = prox_slope(y=y_partition[0], lambdas=lambda_partition[0])
+    prox_k_clusters = [prox_0_cluster]
+
+    for k in range(nr_clusters):
+        b_0_kth = np.array(b_0_partition[k + 1])
+        y_kth = np.array(y_partition[k + 1])
+        lambda_kth = np.array(lambda_partition[k + 1])
+        prox_kth_cluster = prox_slope_on_b_0_single_cluster(b_0=b_0_kth, y=y_kth, lambdas=lambda_kth)
+        prox_k_clusters.append(prox_kth_cluster)
+
+    solution = u_reconstruction(b_0, prox_k_clusters)
+    return solution
+
+#print(np.sign(b_0_test3))
+
+
+print('slope_prox_b_0:', slope_prox_b_0(b_0_test3, y_test3, lambda_test3))
+
+
+'''
+y_partition = y_partition_by_b_0(b_0_test3, y_test3)  # [[5.0, 4.0], [12.0, 18.0], [60.0, 50.0, 10.0, -5.0]]
+lambda_partition = lambda_partition_by_b_0(b_0_test3, lambda_test3) # [[1.0, 3.0], [15.0, 18.0], [20.0, 40.0, 42.0, 65.0]]
+b_0_partition = y_partition_by_b_0(b_0_test3, b_0_test3)
+prox_0_cluster = prox_slope(y=y_partition[0], lambdas=lambda_partition[0])
+prox_k_clusters = [prox_0_cluster]
+
+for k in range(2):
+    b_0_kth = np.array(b_0_partition[k+1])
+    y_kth = np.array(y_partition[k + 1])
+    lambda_kth = np.array(lambda_partition[k + 1])
+    prox_kth_cluster = prox_slope_on_b_0_single_cluster(b_0=b_0_kth, y=y_kth, lambdas=lambda_kth)
+    prox_k_clusters.append(prox_kth_cluster)
+
+#print(prox_k_clusters)
+#print(u_reconstruction(b_0_test3, prox_k_clusters))
+#print(b_0_partition)
+'''
+
+
