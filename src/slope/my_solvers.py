@@ -293,6 +293,54 @@ def prox_slope_b_0(b_0, y, lambdas):
     solution = u_reconstruction(b_0, prox_k_clusters) # [2.5, 1.5, 2.5, 1.5, 32.5, 32.5, -3.0, -1.0]
     return solution
 
+'''
+C=np.array([[1, 0], [ 0, 1]])
+print(C)
+print(C@np.array([2, 3]))
+W = np.array([5,4])
+lambdas = np.array([1,3])
+b_00 = np.array([0,0])
+u_0 = np.array([0,0])
+stepsize_t = 0.4
+prox_step = prox_slope_b_0(b_00, u_0-stepsize_t*(C@u_0-W), lambdas*stepsize_t)
+print(prox_step)
+prox_step = prox_slope_b_0(b_00, prox_step-stepsize_t*(C@prox_step-W), lambdas*stepsize_t)
+print(prox_step)
+'''
+
+
+def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
+    u_0 = np.zeros(len(b_0))
+    prox_step = u_0
+    stepsize_t = t
+    for i in range(n):
+        prox_step = prox_slope_b_0(b_0, prox_step - stepsize_t * (C @ prox_step - W), lambdas * stepsize_t)
+    return(prox_step)
+
+def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
+
+    u_0 = np.zeros(len(b_0))
+    u_kmin2 = u_0
+    u_kmin1 = u_0
+    v = u_0
+    stepsize_t = t
+    k=1
+    for k in range(n):
+        v = u_kmin1 +((k-2)/(k+1))*(u_kmin1-u_kmin2)
+        u_k = prox_slope_b_0(b_0, v - stepsize_t * (C @ v - W), lambdas * stepsize_t)
+        u_kmin2 = u_kmin1
+        u_kmin1 = u_k
+    return (u_k)
+
+
+C=np.array([[1, 0], [ 0, 1]])
+W = np.array([5,4])
+lambdas = np.array([1,3])
+b_00 = np.array([0,0])
+stepsize_t = 0.4
+print(pgd_slope_b_0_ISTA(C, W, b_00, lambdas, stepsize_t, 10))
+print(pgd_slope_b_0_FISTA(C, W, b_00, lambdas, stepsize_t, 10))
+
 
 b_0_test1 = np.array([1, 1, -1, -1])
 y_test1 = np.array([60.0, 50.0, 10.0, -5.0])
@@ -301,8 +349,8 @@ lambdas_test1 = np.array([65.0, 42.0, 40.0, 20.0])
 b_0_test0 = np.array([0, 0, 0, 0])
 
 
-print("prox_slope_b_0:", prox_slope_b_0(b_0_test0, y_test1, lambdas_test1))
-print("prox_slope_b_0:", prox_slope_b_0(b_0_test1, y_test1, lambdas_test1))
+#print("prox_slope_b_0:", prox_slope_b_0(b_0_test0, y_test1, lambdas_test1))
+#print("prox_slope_b_0:", prox_slope_b_0(b_0_test1, y_test1, lambdas_test1))
 
 b_0_test3 = np.array([0, 2, 0, 2, -2, -2, 1, 1])
 y_test3 = np.array([5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0])
@@ -310,7 +358,8 @@ lambda_test3 = [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]
 
 
 
-print('prox_slope_b_0:', prox_slope_b_0(b_0_test3, y_test3, lambda_test3))
+#print('prox_slope_b_0:', prox_slope_b_0(b_0_test3, y_test3, lambda_test3))
+'''
 # Compare with
 print('b_0:', b_0_test3)
 print("zero-cluster:", prox_slope(y=np.array([5.0, 4.0]), lambdas=np.array([3.0, 1.0])),
@@ -319,7 +368,7 @@ print("zero-cluster:", prox_slope(y=np.array([5.0, 4.0]), lambdas=np.array([3.0,
       "two-cluster:",
       prox_slope_on_b_0_single_cluster(b_0=np.array([2, 2, -2, -2]), y=np.array([60.0, 50.0, 10.0, -5.0]),
                                        lambdas=np.array([65.0, 42.0, 40.0, 20.0])))
-
+'''
 
 '''
 X = np.array([[1.0, 0.0], [0.0, 1.0]])
