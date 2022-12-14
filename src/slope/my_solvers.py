@@ -333,13 +333,15 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
     return (u_k)
 
 
-C=np.array([[1, 0], [ 0, 1]])
-W = np.array([5,4])
-lambdas = np.array([1,3])
+C=np.array([[2, 0], [0, 1]])
+W = np.array([5.0, 4.0])
+lambdas = np.array([1.0, 3.0])
 b_00 = np.array([0,0])
-stepsize_t = 0.4
-print(pgd_slope_b_0_ISTA(C, W, b_00, lambdas, stepsize_t, 10))
-print(pgd_slope_b_0_FISTA(C, W, b_00, lambdas, stepsize_t, 10))
+stepsize_t = 0.4 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
+
+print("prox_slope_b_0:", prox_slope_b_0(b_00, W, lambdas)) #
+print(pgd_slope_b_0_ISTA(C, W, b_00, lambdas, stepsize_t, 20))
+print(pgd_slope_b_0_FISTA(C, W, b_00, lambdas, stepsize_t, 20))
 
 
 b_0_test1 = np.array([1, 1, -1, -1])
@@ -349,8 +351,8 @@ lambdas_test1 = np.array([65.0, 42.0, 40.0, 20.0])
 b_0_test0 = np.array([0, 0, 0, 0])
 
 
-#print("prox_slope_b_0:", prox_slope_b_0(b_0_test0, y_test1, lambdas_test1))
-#print("prox_slope_b_0:", prox_slope_b_0(b_0_test1, y_test1, lambdas_test1))
+print("prox_slope_b_0:", prox_slope_b_0(b_0_test0, y_test1, lambdas_test1))
+print("prox_slope_b_0:", prox_slope_b_0(b_0_test1, y_test1, lambdas_test1))
 
 b_0_test3 = np.array([0, 2, 0, 2, -2, -2, 1, 1])
 y_test3 = np.array([5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0])
@@ -358,7 +360,7 @@ lambda_test3 = [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]
 
 
 
-#print('prox_slope_b_0:', prox_slope_b_0(b_0_test3, y_test3, lambda_test3))
+print('prox_slope_b_0:', prox_slope_b_0(b_0_test3, y_test3, lambda_test3))
 '''
 # Compare with
 print('b_0:', b_0_test3)
