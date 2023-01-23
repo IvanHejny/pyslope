@@ -23,6 +23,8 @@ dependencies = [
     "scipy >= 1.9",
     "rpy2"
 ]
+[tool.setuptools.packages.find]
+where = ["src"]  # list of folders that contain the packages (["."] by default)
 
 [tool.isort]
 profile = "black"
