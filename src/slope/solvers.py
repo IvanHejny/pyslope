@@ -2,7 +2,7 @@ import numpy as np
 from numpy.linalg import norm
 from scipy import sparse
 
-from slope.utils import dual_norm_slope, prox_slope, sl1_norm
+from src.slope.utils import dual_norm_slope, prox_slope, sl1_norm
 
 
 def pgd_slope(
@@ -261,7 +261,6 @@ def u_reconstruction(b_0, u_partition):
 
 
 
-
 def prox_slope_new(y, lambdas):
     """Compute the sorted L1 proximal operator.
 
@@ -315,8 +314,6 @@ def prox_slope_new(y, lambdas):
     y *= y_sign
 
     return y
-
-
 
 def prox_slope_b_0(b_0, y, lambdas):
     """Compute the prox operator for the generalized slope norm J_{b^0,lambda}, i.e; prox_{J_{b^0,lambda}}(y) = argmin_u (1/2)||u-y||^2+J_{b^0,lambda}(u)
