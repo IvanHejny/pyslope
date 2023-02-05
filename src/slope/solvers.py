@@ -266,9 +266,9 @@ def prox_slope_new(y, lambdas):
 
     Parameters
     ----------
-    y : array
+    y : np.array
         vector of coefficients
-    lambdas : array
+    lambdas : np.array
         vector of regularization weights
 
     Returns
@@ -324,7 +324,7 @@ def prox_slope_b_0(b_0, y, lambdas):
            pattern vector of the true signal
        y : np.array
            input vector of coefficients
-       lambdas : array
+       lambdas : np.array
            vector of regularization weights
 
        Returns

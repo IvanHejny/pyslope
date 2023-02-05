@@ -1,55 +1,4 @@
-import numpy as np
-from numpy.linalg import norm
-from scipy import sparse
-
-from src.slope.utils import dual_norm_slope, prox_slope, sl1_norm
 from src.slope.solvers import*
-
-
-def pgd_slope(X, y, lambdas, fit_intercept=True, gap_tol=1e-6, max_it=10_000, verbose=False, ):
-    n, p = X.shape
-
-    residual = y.copy()
-    beta = np.zeros(p)
-    intercept = 0.0
-
-    primals, duals, gaps = [], [], []
-
-    if sparse.issparse(X):
-        L = sparse.linalg.svds(X, k=1)[1][0] ** 2 / n
-    else:
-        L = norm(X, ord=2) ** 2 / n
-
-    for it in range(max_it):
-        beta = prox_slope(beta + (X.T @ residual) / (L * n), lambdas / L)
-
-        if fit_intercept:
-            intercept = np.mean(residual)
-
-        residual = y - X @ beta - intercept
-
-        theta = residual / n
-        theta /= max(1, dual_norm_slope(X, theta, lambdas))
-
-        primal = 0.5 * norm(residual) ** 2 / n + sl1_norm(beta, lambdas)
-        dual = 0.5 * (norm(y) ** 2 - norm(y - theta * n) ** 2) / n
-        gap = primal - dual
-
-        primals.append(primal)
-        duals.append(primal)
-        gaps.append(gap)
-
-        if verbose:
-            print(f"epoch: {it + 1}, loss: {primal}, gap: {gap:.2e}")
-
-        if gap < gap_tol:
-            break
-
-    # return dict(beta=beta, intercept=intercept, primals=primals, duals=duals, gaps=gaps)
-    return dict(beta=beta, intercept=intercept)
-
-# def pgd_slope_b_0 (C, W, b_0, lambdas )
-
 
 '''
 C=np.array([[1, 0], [ 0, 1]])
@@ -65,29 +14,6 @@ print(prox_step)
 prox_step = prox_slope_b_0(b_00, prox_step-stepsize_t*(C@prox_step-W), lambdas*stepsize_t)
 print(prox_step)
 '''
-
-def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
-    u_0 = np.zeros(len(b_0))
-    prox_step = u_0
-    stepsize_t = t
-    for i in range(n):
-        prox_step = prox_slope_b_0(b_0, prox_step - stepsize_t * (C @ prox_step - W), lambdas * stepsize_t)
-    return(prox_step)
-
-def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
-
-    u_0 = np.zeros(len(b_0))
-    u_kmin2 = u_0
-    u_kmin1 = u_0
-    v = u_0
-    stepsize_t = t
-    k=1
-    for k in range(n):
-        v = u_kmin1 + ((k-2)/(k+1))*(u_kmin1-u_kmin2)
-        u_k = prox_slope_b_0(b_0, v - stepsize_t * (C @ v - W), lambdas * stepsize_t)
-        u_kmin2 = u_kmin1
-        u_kmin1 = u_k
-    return (u_k)
 
 
 C = np.array([[1, 0], [0, 1]])
@@ -118,6 +44,8 @@ y_test1x = np.array([60.0, 50.0, -5.0, 10.0])
 lambdas_test1x = np.array([65.0, 42.0, 40.0, 40.0])
 
 print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, y_test1x, lambdas_test1x)) #(1.5, 1.5, 35, -30) coincides with theory
+print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60.0, 50.0, -5.0, 10.0], [65.0, 42.0, 40.0, 40.0])) #correct
+print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60, 50, -5, 10], [65, 42, 40, 40])) #ridiculous incorrect result because of type issue
 print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.35, n = 50))
 #print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.35, n = 50))
 
@@ -129,7 +57,6 @@ print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = np.identity(4), W = y_tes
 
 #for i in range(10):
 #    print("pdg_slope_b_0_FISTA:", pgd_slope_b_0_FISTA(C_test1, np.random.multivariate_normal([0,0], [[20, 0], [0, 20]])[0], b_0_test01, lambdas_test01, stepsize_t, 4))
-
 
 
 b_0_test3 = np.array([0, 2, 0, 2, -2, -2, 1, 1])
