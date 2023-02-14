@@ -332,6 +332,8 @@ def prox_slope_b_0(b_0, y, lambdas):
        array
            the result of the proximal operator
        """
+    y = [np.float(i) for i in y]
+    lambdas = [np.float(i) for i in lambdas]
     # b_0 = [0, 2, 0, 2, -2, -2, 1, 1]
     # y = [5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0]
     # lambdas = [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]
