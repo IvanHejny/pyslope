@@ -357,9 +357,11 @@ def prox_slope_b_0(b_0, y, lambdas):
 
 
 def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
+    #W = [np.float(i) for i in W]
+    #lambdas = [np.float(i) for i in lambdas]
     u_0 = np.zeros(len(b_0))
     prox_step = u_0
-    stepsize_t = t
+    stepsize_t = np.float(t)
     for i in range(n):
         prox_step = prox_slope_b_0(b_0, prox_step - stepsize_t * (C @ prox_step - W), lambdas * stepsize_t)
     return(prox_step)
