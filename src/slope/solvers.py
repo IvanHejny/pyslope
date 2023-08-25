@@ -357,6 +357,29 @@ def prox_slope_b_0(b_0, y, lambdas):
 
 
 def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
+    """Compute the solution to minimize: 1/2 u^T*C*u-u^T*W+J_{b^0,lambda}(u),
+     where J_{b^0,lambda} is the slope norm
+       Parameters
+       ----------
+       C: np.array
+           covariance matrix of the data
+       W: np.array
+           p-dimensional vector, in our paper it arises from normal N(0, \sigma^2 * C ),
+           where \sigma^2 is variance of the noise
+       b_0: np.array
+           pattern vector of the true signal
+       lambdas : np.array
+           vector of regularization weights
+       t: np.float
+           step size
+       n: integer
+           number of steps before termination
+
+       Returns
+       -------
+       array
+           the unique solution to the minimization problem, given by a vector u.
+       """
     #W = [np.float(i) for i in W]
     #lambdas = [np.float(i) for i in lambdas]
     u_0 = np.zeros(len(b_0))
@@ -367,7 +390,29 @@ def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
     return(prox_step)
 
 def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
+    """Compute the solution to minimize: 1/2 u^T*C*u-u^T*W+J_{b^0,lambda}(u),
+     where J_{b^0,lambda} is the slope norm
+       Parameters
+       ----------
+       C: np.array
+           covariance matrix of the data
+       W: np.array
+           p-dimensional vector, in our paper it arises from normal N(0, \sigma^2 * C ),
+           where \sigma^2 is variance of the noise
+       b_0: np.array
+           pattern vector of the true signal
+       lambdas : np.array
+           vector of regularization weights
+       t: np.float
+           step size
+       n: integer
+           number of steps before termination
 
+       Returns
+       -------
+       array
+           the unique solution to the minimization problem, given by a vector u.
+       """
     u_0 = np.zeros(len(b_0))
     u_kmin2 = u_0
     u_kmin1 = u_0
