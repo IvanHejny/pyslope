@@ -1,9 +1,10 @@
 import numpy as np
-import math
+from src.slope.solvers import*
+#import math
 
-from src.slope.solvers import pgd_slope, pgd_slope_without_n
-from src.slope.utils import prox_slope
-from src.slope.solvers import prox_slope_new
+#from src.slope.solvers import pgd_slope, pgd_slope_without_n
+#from src.slope.utils import prox_slope
+#from src.slope.solvers import prox_slope_new
 '''
 X = np.array([[1.0, 0.0], [0.0, 1.0]])
 y = np.array([5.0, 4.0])
@@ -29,9 +30,20 @@ print("prox_slope_new:", prox_slope_new(y,lambdas)) #correct
 '''
 
 
-C = np.array([[1, 0.5], [0.5, 1]])
-W = np.array([5.0, 4.0])
-lambdas = np.array([0.9, 0.2])
-b_00 = np.array([1, 1])
+C1 = np.array([[1, 0.5], [0.5, 1]])
+W1 = np.array([5.0, 4.0])
+lambdas1 = np.array([0.9, 0.2])
+b0_test1 = np.array([1, 1])
 stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
+print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
+print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
+
+
+C2 = np.identity(4)
+b0_test2 = np.array([1, 1, -1, 1])
+W2 = np.array([60.0, 50.0, -5.0, 10.0])
+lambdas2 = np.array([65.0, 42.0, 40.0, 40.0])
+print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
+print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
+
 
