@@ -30,20 +30,72 @@ print("prox_slope_new:", prox_slope_new(y,lambdas)) #correct
 '''
 
 
+
+
 C1 = np.array([[1, 0.5], [0.5, 1]])
 W1 = np.array([5.0, 4.0])
 lambdas1 = np.array([0.9, 0.2])
 b0_test1 = np.array([1, 1])
 stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
-print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
-print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
+#print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
+#print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
 
 
 C2 = np.identity(4)
 b0_test2 = np.array([1, 1, -1, 1])
 W2 = np.array([60.0, 50.0, -5.0, 10.0])
 lambdas2 = np.array([65.0, 42.0, 40.0, 40.0])
-print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
-print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
+#print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
+#print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
+
+
+
+
+alpha = 2/3 + 0.01
+C3 = np.array([[1, alpha], [alpha, 1]])
+W1 = np.array([5.0, 4.0])
+lambdas3 = np.array([3, 2])
+const = 10
+b0_test3 = np.array([1, 0])
+stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
+#print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
+n=200
+correct_recovery = 0
+'''
+for i in range(n):
+    W3 = np.random.multivariate_normal(np.zeros(2), C3)
+    sol = pgd_slope_b_0_FISTA( C = C3, W = W3, b_0 = b0_test3, lambdas = const*lambdas3, t = 0.35, n = 50)
+    print("pdg_slope_b_0_FISTA_x:", sol)
+    if sol[1] == 0:
+        correct_recovery = correct_recovery + 1
+print('proportion of correct recoveries is', correct_recovery/n)
+'''
+
+from scipy.stats import norm
+C4 = np.identity(10)
+rho = 0.2
+C5 = rho * np.identity(10) + (1-rho) * np.ones((10, 10))
+#print(C5)
+b0_test4 = row_vector = np.concatenate((np.zeros(5), np.ones(5))).astype(int)
+#print(b0_test4)
+#print(type(b0_test4))
+#print(type(b0_test3))
+# Specify the quantiles you want (e.g., 10 equidistant quantiles given by the BH sequence)
+p = 10
+q = 0.15
+quantiles = np.linspace(1-(p-1)*q/(2*p), 1-q/(2*p), p)
+# Calculate the p BH coefficients for a given level q
+sigma = 1
+lambdas_BH = norm.ppf(quantiles)
+#print(type(lambdas_BH))
+#print(type(lambdas3))
+W4 = np.random.multivariate_normal(np.zeros(p), C4)
+print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C4, W = W4, b_0 = b0_test4, lambdas = lambdas_BH, t = 0.35, n = 50))
+#for i in range(n):
+#    W4 = np.random.multivariate_normal(np.zeros(p), C4)
+#    sol = pgd_slope_b_0_FISTA( C = C4, W = W4, b_0 = b0_test4, lambdas = lambdas_BH, t = 0.35, n = 50)
+#    print("pdg_slope_b_0_FISTA_x:", sol)
+
+
 
 
