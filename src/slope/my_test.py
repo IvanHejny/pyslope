@@ -32,6 +32,7 @@ print("prox_slope_new:", prox_slope_new(y,lambdas)) #correct
 
 
 
+
 C1 = np.array([[1, 0.5], [0.5, 1]])
 W1 = np.array([5.0, 4.0])
 lambdas1 = np.array([0.9, 0.2])
@@ -51,7 +52,7 @@ lambdas2 = np.array([65.0, 42.0, 40.0, 40.0])
 
 
 
-alpha = 2/3 + 0.01
+alpha = 2/3 - 0.01 #- 0.01
 C3 = np.array([[1, alpha], [alpha, 1]])
 W1 = np.array([5.0, 4.0])
 lambdas3 = np.array([3, 2])
@@ -75,9 +76,10 @@ from scipy.stats import norm
 C4 = np.identity(10)
 rho = 0.2
 C5 = rho * np.identity(10) + (1-rho) * np.ones((10, 10))
-#print(C5)
-b0_test4 = row_vector = np.concatenate((np.zeros(5), np.ones(5))).astype(int)
-#print(b0_test4)
+print(C5)
+b0_test4 = np.concatenate((np.zeros(5), np.ones(5))).astype(int) # pattern vector
+print(b0_test4)
+b0_test5 = pattern(np.array([0,0,0,1,1,2,2,-2,3, -3]))
 #print(type(b0_test4))
 #print(type(b0_test3))
 # Specify the quantiles you want (e.g., 10 equidistant quantiles given by the BH sequence)
@@ -90,12 +92,23 @@ lambdas_BH = norm.ppf(quantiles)
 #print(type(lambdas_BH))
 #print(type(lambdas3))
 W4 = np.random.multivariate_normal(np.zeros(p), C4)
-print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C4, W = W4, b_0 = b0_test4, lambdas = lambdas_BH, t = 0.35, n = 50))
+print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C4, W = W4, b_0 = b0_test4, lambdas = 10*lambdas_BH, t = 0.35, n = 50))
 #for i in range(n):
 #    W4 = np.random.multivariate_normal(np.zeros(p), C4)
 #    sol = pgd_slope_b_0_FISTA( C = C4, W = W4, b_0 = b0_test4, lambdas = lambdas_BH, t = 0.35, n = 50)
 #    print("pdg_slope_b_0_FISTA_x:", sol)
 
+n = 100
+correct_recovery = 0
+for i in range(n):
+    W4 = np.random.multivariate_normal(np.zeros(p), C5)
+    u_hat = pgd_slope_b_0_FISTA( C = C4, W = W4, b_0 = b0_test4, lambdas = 3*lambdas_BH, t = 0.35, n = 50)
+    print("pdg_slope_b_0_FISTA_x:", u_hat, pattern(u_hat))
 
+    patt_b0 = pattern(b0_test4)
+    patt_bhat = pattern(b0_test4 + 0.01 * pattern(u_hat))
+    if all(patt_bhat_i == patt_b0_i for patt_bhat_i, patt_b0_i in zip(patt_bhat,patt_b0)):
+        correct_recovery = correct_recovery + 1
+print('proportion of correct recoveries is', correct_recovery/n)
 
 

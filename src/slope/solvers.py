@@ -426,3 +426,29 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
         u_kmin1 = u_k
     return (u_k)
 
+def pattern(u):
+    """
+    Calculate the SLOPE pattern of a vector: rank(abs(u_i)) * sgn(u_i).
+
+    Parameters:
+        u (np.ndarray): Input vector.
+
+    Returns:
+        np.ndarray: Integer-valued vector.
+    """
+    # Calculate the absolute values of the elements in u
+    abs_u = np.abs(u)
+
+    # Calculate the unique ranks of the absolute values (ascending order)
+    if 0 in abs_u:
+        unique_ranks = np.unique(abs_u, return_inverse=True)[1]
+    else:
+        unique_ranks = np.unique(abs_u, return_inverse=True)[1] + 1
+
+    # Calculate the sign of each element in u
+    sign_u = np.sign(u)
+
+    # Calculate the SLOPE pattern
+    result = unique_ranks * sign_u
+
+    return result.astype(int)
