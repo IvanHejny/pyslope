@@ -42,36 +42,50 @@ stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of
 #print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
 
 
+
+
+
+
+
+
+'''
 C2 = np.identity(4)
 b0_test2 = np.array([1, 1, -1, 1])
 W2 = np.array([60.0, 50.0, -5.0, 10.0])
 lambdas2 = np.array([65.0, 42.0, 40.0, 40.0])
 #print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
 #print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = C2, W = W2, b_0 = b0_test2, lambdas = lambdas2, t = 0.35, n = 50))
+'''
 
 
-
-
-alpha = 2/3 - 0.01 #- 0.01
+# Sampling u_hat from the limiting distribution, with given C = [[1,alpha][alpha,1]] and lambda = [3,2] and b_0 = [1,0].
+# Testing the irrepresantability condition. This is satisfied for iff E[Z] on the interior of the line (3,2)-(3,-2), which is iff alpha < 2/3.
+# For alpha <2/3 and lambda big, we will recover the true pattern with high probability.
+alpha = 2/3 - 0.01 #for b0 = [1,0], lambda = [3,2], alpha = 2/3 is the critical threshold for perfect pattern recovery
 C3 = np.array([[1, alpha], [alpha, 1]])
 W1 = np.array([5.0, 4.0])
-lambdas3 = np.array([3, 2])
-const = 10
-b0_test3 = np.array([1, 0])
+lambdas3 = np.array([0.3, 0.2])
+const = 1 # for const = 0 we get OLS estimator, which minimizes asymptotic MSE but has zero pattern recovery success
+b0_test3 = np.array([1, 1])
 stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
 #print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
-n=200
+n = 200
+
 correct_recovery = 0
-'''
+MSE = 0
 for i in range(n):
     W3 = np.random.multivariate_normal(np.zeros(2), C3)
     sol = pgd_slope_b_0_FISTA( C = C3, W = W3, b_0 = b0_test3, lambdas = const*lambdas3, t = 0.35, n = 50)
-    print("pdg_slope_b_0_FISTA_x:", sol)
-    if sol[1] == 0:
+    norm2 = np.linalg.norm(sol)**2
+    MSE = MSE + norm2
+    print("pdg_slope_b_0_FISTA_x:", sol, norm2)
+    if all(pattern(b0_test3 + 0.0001 * sol) == pattern(b0_test3)):
         correct_recovery = correct_recovery + 1
 print('proportion of correct recoveries is', correct_recovery/n)
-'''
+print('MSE is', MSE/n)
 
+#print([1,2]/2)
+'''
 from scipy.stats import norm
 C4 = np.identity(10)
 rho = 0.2
@@ -110,5 +124,4 @@ for i in range(n):
     if all(patt_bhat_i == patt_b0_i for patt_bhat_i, patt_b0_i in zip(patt_bhat,patt_b0)):
         correct_recovery = correct_recovery + 1
 print('proportion of correct recoveries is', correct_recovery/n)
-
-
+'''
