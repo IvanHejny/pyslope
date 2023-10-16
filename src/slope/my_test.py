@@ -71,57 +71,70 @@ b0_test3 = np.array([1, 1])
 stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
 #print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
 
-def patternMSE(b_0, C, lambdas, n):
+def patternMSE(b_0, C, lambdas, n, Cov = None):
+    if Cov is None:
+        Cov = C
     p = len(b_0)
     b_0 = pattern(b_0)
-    correct_recovery = 0
+    correct_pattern_recovery = 0
+    correct_support_recovery = 0
     MSE = 0
     for i in range(n):
-        W = np.random.multivariate_normal(np.zeros(p), C)
-        sol = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas = lambdas, t=0.35, n=30)
-        norm2 = np.linalg.norm(sol) ** 2
+        W = np.random.multivariate_normal(np.zeros(p), Cov)
+        u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=0.35, n=30)
+        norm2 = np.linalg.norm(u_hat) ** 2
         MSE = MSE + norm2
-        #print("pdg_slope_b_0_FISTA_x:", sol, norm2)
-        if all(pattern(b_0 + 0.0001 * sol) == b_0):
-            correct_recovery = correct_recovery + 1
+        #print("pdg_slope_b_0_FISTA_x:", u_hat, np.sqrt(norm2))
+        if all(pattern(b_0 + 0.0001 * u_hat) == b_0):
+            correct_pattern_recovery = correct_pattern_recovery + 1
+        if all(np.sign(pattern(b_0 + 0.0001 * u_hat)) == np.sign(b_0)):
+            correct_support_recovery = correct_support_recovery + 1
     #print('pattern recovery proportion + MSE')
-    return(correct_recovery / n, MSE / n)
-    #print('proportion of correct recoveries is', correct_recovery / n)
+    return(correct_pattern_recovery / n, np.sqrt(MSE / n), correct_support_recovery /n)
+    #print('proportion of correct recoveries is', correct_pattern_recovery / n)
     #print('MSE is', MSE / n)
 
 alpha = 2/3
-print(patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = 10*np.array([0.3, 0.3]), n = 100))
+#print(patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = 10*np.array([0.3, 0.3]), n = 100))
 
-print(pattern(np.array([2.2,0])))
+rho = 0.5
+#print(rho * np.identity(10) + (1-rho) * np.ones((10, 10)))
+C_compound = (1-rho) * np.identity(4) + rho * np.ones((4, 4))
+print(C_compound)
+print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = C_compound, lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500))
+print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = C_compound, lambdas = 2*np.array([1, 1, 1, 1 ]), n = 500))
+print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 20*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) #2 step SLOPE, perfect pattern recovery
+print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 20*np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) #2 STEP Lasso, perfect support recovery
 
 
+#print(np.sign(pattern(np.array([0,0,-1.3,1.3, 2.7]))))
 
-
+'''
 # Define the range of x values
 x = np.linspace(0, 1, 20)  # Generates 10 points between 0 and 5
 
 # Calculate y values for each function
 alpha = 2/3
-y1 = np.empty(shape=(0,))
-y2 = np.empty(shape=(0,))
-y1Lasso = np.empty(shape=(0,))
-y2Lasso = np.empty(shape=(0,))
+PattSLOPE = np.empty(shape=(0, ))
+MseSLOPE = np.empty(shape=(0, ))
+PattLasso = np.empty(shape=(0, ))
+MseLasso = np.empty(shape=(0, ))
 for i in range(len(x)):
-    result = patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = x[i]*np.array([0.8, 1.2]), n = 500)
-    resultLasso = patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = x[i]*np.array([1, 1]), n = 500)
-    y1 = np.append(y1, result[0])
-    y2 = np.append(y2, result[1])
-    y1Lasso = np.append(y1Lasso, resultLasso[0])
-    y2Lasso = np.append(y2Lasso, resultLasso[1])
-print(y1Lasso)
-#print(y2Lasso)
+    result = patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = x[i]*np.array([0.8, 1.2]), n = 50)
+    resultLasso = patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = x[i]*np.array([1, 1]), n = 50)
+    PattSLOPE = np.append(PattSLOPE, result[0])
+    MseSLOPE = np.append(MseSLOPE, result[1])
+    PattLasso = np.append(PattLasso, resultLasso[0])
+    MseLasso = np.append(MseLasso, resultLasso[1])
+#print(PattLasso)
+#print(MseLasso)
 
 # Plot the functions on the same graph
 plt.figure(figsize=(3, 6))
-plt.plot(x, y1, label='SLOPE pattern recovery', color='blue')  # Plot probability of pattern recovery by SLOPE in blue
-plt.plot(x, y2, label='SLOPE MSE', color='green')  # Plot MSE of SLOPE in green
-plt.plot(x, y1Lasso, label='Lasso pattern recovery', color='red')
-plt.plot(x, y2Lasso, label='Lasso MSE', color='orange') # Plot MSE of Lasso in red
+plt.plot(x, PattSLOPE, label='SLOPE pattern recovery', color='blue')  # Plot probability of pattern recovery by SLOPE in blue
+plt.plot(x, MseSLOPE, label='SLOPE MSE', color='green')  # Plot MSE of SLOPE in green
+plt.plot(x, PattLasso, label='Lasso pattern recovery', color='red')
+plt.plot(x, MseLasso, label='Lasso MSE', color='orange') # Plot MSE of Lasso in red
 plt.xlabel('penalty scaling $\sigma$')
 plt.ylabel('Performance')
 plt.title('Pattern Recovery and MSE')
@@ -132,10 +145,11 @@ plt.legend()  # Show legend to differentiate between functions
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
+'''
 
 
 '''
+#first simulation attempts for MSE and Pattern recovery
 n = 200
 
 correct_recovery = 0
@@ -153,7 +167,7 @@ print('MSE is', MSE/n)
 '''
 
 
-#print([1,2]/2)
+
 '''
 from scipy.stats import norm
 C4 = np.identity(10)
