@@ -1,6 +1,7 @@
 import numpy as np
 from src.slope.solvers import*
 #import math
+import matplotlib.pyplot as plt
 
 #from src.slope.solvers import pgd_slope, pgd_slope_without_n
 #from src.slope.utils import prox_slope
@@ -93,7 +94,7 @@ print(patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]),
 
 print(pattern(np.array([2.2,0])))
 
-import matplotlib.pyplot as plt
+
 
 
 # Define the range of x values
