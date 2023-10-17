@@ -71,6 +71,7 @@ b0_test3 = np.array([1, 1])
 stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
 #print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
 
+
 def patternMSE(b_0, C, lambdas, n, Cov = None):
     if Cov is None:
         Cov = C
@@ -79,36 +80,153 @@ def patternMSE(b_0, C, lambdas, n, Cov = None):
     correct_pattern_recovery = 0
     correct_support_recovery = 0
     MSE = 0
+    dim_reduction = 0
     for i in range(n):
         W = np.random.multivariate_normal(np.zeros(p), Cov)
         u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=0.35, n=30)
         norm2 = np.linalg.norm(u_hat) ** 2
         MSE = MSE + norm2
+        dim_reduction = dim_reduction + p-len(np.unique(u_hat))
         #print("pdg_slope_b_0_FISTA_x:", u_hat, np.sqrt(norm2))
         if all(pattern(b_0 + 0.0001 * u_hat) == b_0):
             correct_pattern_recovery = correct_pattern_recovery + 1
         if all(np.sign(pattern(b_0 + 0.0001 * u_hat)) == np.sign(b_0)):
             correct_support_recovery = correct_support_recovery + 1
     #print('pattern recovery proportion + MSE')
-    return(correct_pattern_recovery / n, np.sqrt(MSE / n), correct_support_recovery /n)
+    return(np.sqrt(MSE / n), correct_pattern_recovery / n , correct_support_recovery /n, dim_reduction/n)
     #print('proportion of correct recoveries is', correct_pattern_recovery / n)
     #print('MSE is', MSE / n)
 
 alpha = 2/3
 #print(patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = 10*np.array([0.3, 0.3]), n = 100))
 
-rho = 0.5
+rho = 0.8
 #print(rho * np.identity(10) + (1-rho) * np.ones((10, 10)))
 C_compound = (1-rho) * np.identity(4) + rho * np.ones((4, 4))
-print(C_compound)
-print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = C_compound, lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500))
-print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = C_compound, lambdas = 2*np.array([1, 1, 1, 1 ]), n = 500))
-print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 20*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) #2 step SLOPE, perfect pattern recovery
-print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 20*np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) #2 STEP Lasso, perfect support recovery
+C_block = np.array([[1, rho, 0, 0],
+                    [rho, 1, 0, 0],
+                    [0, 0, 1, rho],
+                    [0, 0, rho, 1]])
+C_block1 = np.array([[1, 0, 0, 0],
+                     [0, 1, rho, rho],
+                     [0, rho, 1, rho],
+                     [0, rho, rho, 1]])
 
+array1 = np.ones(1)
+print(array1)
+array2 = (1-rho) * np.identity(6) + rho * np.ones((6, 6))
+print(array2)
+block_diag_matrix = np.block([[array1, np.zeros((1,6))],
+                              [np.zeros((6,1)), array2]])
+print(block_diag_matrix)
+compound_block = (1-rho) * np.identity(3) + rho * np.ones((3, 3))
+block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))],
+                              [np.zeros((3,3)), compound_block, np.zeros((3,3))],
+                               [np.zeros((3,3)), np.zeros((3,3)), compound_block]])
+
+print(block_diag_matrix9)
+print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1.3, 1.1, 0.9, 0.7]), n = 100))
+print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1, 1, 1, 1 ]), n = 100))
+#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) #2 step SLOPE, perfect pattern recovery
+#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) #2 STEP Lasso, perfect support recovery
+print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
+print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1]), n = 100))
 
 #print(np.sign(pattern(np.array([0,0,-1.3,1.3, 2.7]))))
 
+#p=4 simulations
+'''
+# Define the range of x values
+x = np.linspace(0, 3, 24)  # Generates 10 points between 0 and 5
+
+# Calculate y values for each function
+
+PattSLOPE = np.empty(shape=(0, ))
+MseSLOPE = np.empty(shape=(0, ))
+PattLasso = np.empty(shape=(0, ))
+MseLasso = np.empty(shape=(0, ))
+SupportSLOPE = np.empty(shape=(0, ))
+SupportLasso = np.empty(shape=(0, ))
+for i in range(len(x)):
+    resultSLOPE = patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = x[i]*np.array([1.3, 1.1, 0.9, 0.7]), n = 50)
+    resultLasso = patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = x[i]*np.array([1, 1, 1, 1 ]), n = 50)
+    MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
+    PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
+    SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
+    MseLasso = np.append(MseLasso, resultLasso[0])
+    PattLasso = np.append(PattLasso, resultLasso[1])
+    SupportLasso = np.append(SupportLasso, resultLasso[2])
+
+#print(PattLasso)
+#print(MseLasso)
+
+# Plot the functions on the same graph
+plt.figure(figsize=(3, 6))
+plt.plot(x, MseSLOPE, label='SLOPE RMSE', color='green')  # Plot RMSE of SLOPE in green
+plt.plot(x, PattSLOPE, label='SLOPE pattern recovery', color='blue')  # Plot probability of pattern recovery by SLOPE in blue
+plt.plot(x, SupportSLOPE, label='SLOPE support recovery', color='black') # Plot prob of support recovery by SLOPE in black
+plt.plot(x, MseLasso, label='Lasso RMSE', color='orange') # Plot RMSE of Lasso in red
+plt.plot(x, PattLasso, label='Lasso pattern recovery', color='red') # Plot prob of pattern by Lasso in red
+plt.plot(x, SupportLasso, label='Lasso support recovery', color='purple') # Plot prob of support recovery by Lasso in purple
+
+plt.xlabel('penalty scaling $\sigma$')
+plt.ylabel('Performance')
+plt.title('Pattern Recovery and RMSE')
+caption_text = 'Asymptotic performance of SLOPE and Lasso in terms of MSE and Pattern recovery, with $patt(b^0) = [0, 1, 1, 1]$, $C$, and penalty $\lambda = \sigma[1.3, 1.1, 0.9, 0.7]$ (SLOPE) and $\lambda = \sigma[1, 1, 1, 1]$ (Lasso).'
+#plt.figtext(0.5, 0.01, caption_text, wrap =True, ha='center', va='center', fontsize=10, color='black')
+plt.figtext(0.5, +0.02, caption_text, wrap=True, horizontalalignment='center', fontsize=10)
+plt.legend()  # Show legend to differentiate between functions
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+#'''
+
+
+def plot_performance(b_0, C, lambdas, x, n):
+    PattSLOPE = np.empty(shape=(0,))
+    MseSLOPE = np.empty(shape=(0,))
+    PattLasso = np.empty(shape=(0,))
+    MseLasso = np.empty(shape=(0,))
+    SupportSLOPE = np.empty(shape=(0,))
+    SupportLasso = np.empty(shape=(0,))
+
+    for i in range(len(x)):
+        resultSLOPE = patternMSE(b_0=b_0, C=C, lambdas=x[i] * lambdas, n=n)
+        resultLasso = patternMSE(b_0=b_0, C=C, lambdas=x[i] * np.ones(len(b_0)), n=n)
+        MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
+        PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
+        SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
+        MseLasso = np.append(MseLasso, resultLasso[0])
+        PattLasso = np.append(PattLasso, resultLasso[1])
+        SupportLasso = np.append(SupportLasso, resultLasso[2])
+
+    plt.figure(figsize=(6, 6))
+    plt.plot(x, MseSLOPE, label='SLOPE RMSE', color='green')  # Plot RMSE of SLOPE in green
+    plt.plot(x, PattSLOPE, label='SLOPE pattern recovery', color='blue')  # Plot probability of pattern recovery by SLOPE in blue
+    plt.plot(x, SupportSLOPE, label='SLOPE support recovery', color='black')  # Plot prob of support recovery by SLOPE in black
+    plt.plot(x, MseLasso, label='Lasso RMSE', color='orange')  # Plot RMSE of Lasso in orange
+    plt.plot(x, PattLasso, label='Lasso pattern recovery', color='red')  # Plot prob of pattern by Lasso in red
+    plt.plot(x, SupportLasso, label='Lasso support recovery', color='purple')  # Plot prob of support recovery by Lasso in purple
+
+    plt.xlabel('penalty scaling $\sigma$')
+    plt.ylabel('Performance')
+    plt.title('Pattern Recovery and RMSE')
+    caption_text = f'Asymptotic performance with b_0={b_0}, C block diagonal with one compound 0.8 block for each cluster, and penalty scaling $\lambda = \sigma$ {lambdas}' #compound or block diagonal
+    plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+# Example usage:
+# Define b_0, C, lambdas, and x before calling the function
+x = np.linspace(0, 3, 24)
+#plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=50)
+plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=500)
+
+
+#p=2 simulations
 '''
 # Define the range of x values
 x = np.linspace(0, 1, 20)  # Generates 10 points between 0 and 5
@@ -146,6 +264,9 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 '''
+
+
+
 
 
 '''
