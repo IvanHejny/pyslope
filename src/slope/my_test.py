@@ -71,7 +71,7 @@ b0_test3 = np.array([1, 1])
 stepsize_t = 0.35 # to guarantee convergence take stepsize < 1/max eigenvalue of C (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
 #print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = C1, W = W1, b_0 = b0_test1, lambdas = lambdas1, t = 0.35, n = 50))
 
-
+'''
 def patternMSE(b_0, C, lambdas, n, Cov = None):
     if Cov is None:
         Cov = C
@@ -95,12 +95,72 @@ def patternMSE(b_0, C, lambdas, n, Cov = None):
     #print('pattern recovery proportion + MSE')
     return(np.sqrt(MSE / n), correct_pattern_recovery / n , correct_support_recovery /n, dim_reduction/n)
     #print('proportion of correct recoveries is', correct_pattern_recovery / n)
-    #print('MSE is', MSE / n)
+'''
+
+
+def patternMSE(b_0, C, lambdas, n, Cov=None):
+    """
+    Calculate pattern recovery performance, mean squared error (MSE), and dimension reduction for a given pattern
+    vector 'b_0' using SLOPE optimization technique.
+
+    Parameters:
+        b_0 (array-like): True pattern vector to recover.
+        C (array-like): Covariance matrix used in the optimization.
+        lambdas (array-like): Regularization parameter for SLOPE optimization.
+        n (int): Number of simulations to run for performance evaluation.
+        Cov (array-like, optional): Covariance matrix used for data generation. Defaults to None,
+                                    which means it's the same as 'C'.
+
+    Returns:
+        tuple: A tuple containing three performance metrics:
+            - Root Mean Squared Error (RMSE) of the optimization result.
+            - Proportion of correct pattern recoveries.
+            - Proportion of correct support recoveries.
+            - Average dimension reduction.
+    """
+    if Cov is None:
+        Cov = C
+
+    p = len(b_0)
+    b_0 = pattern(b_0)
+    correct_pattern_recovery = 0
+    correct_support_recovery = 0
+    MSE = 0
+    dim_reduction = 0
+
+    for i in range(n):
+        # Generate random data with given covariance matrix
+        W = np.random.multivariate_normal(np.zeros(p), Cov)
+
+        # Perform SLOPE optimization using PGD and FISTA algorithm
+        u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=0.15, n=80)
+
+        # Calculate MSE
+        norm2 = np.linalg.norm(u_hat) ** 2
+        MSE += norm2
+
+        # Calculate dimension reduction
+        dim_reduction += p - len(np.unique(u_hat))
+
+        # Check pattern and support recoveries
+        if all(pattern(b_0 + 0.00001 * u_hat) == b_0):
+            correct_pattern_recovery += 1
+        if all(np.sign(pattern(b_0 + 0.00001 * u_hat)) == np.sign(b_0)):
+            correct_support_recovery += 1
+
+    # Calculate average metrics over simulations
+    rmse = np.sqrt(MSE / n)
+    pattern_recovery_rate = correct_pattern_recovery / n
+    support_recovery_rate = correct_support_recovery / n
+    avg_dim_reduction = dim_reduction / n
+
+    return rmse, pattern_recovery_rate, support_recovery_rate, avg_dim_reduction
+
 
 alpha = 2/3
 #print(patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = 10*np.array([0.3, 0.3]), n = 100))
 
-rho = 0.8
+rho = 0.9
 #print(rho * np.identity(10) + (1-rho) * np.ones((10, 10)))
 C_compound = (1-rho) * np.identity(4) + rho * np.ones((4, 4))
 C_block = np.array([[1, rho, 0, 0],
@@ -125,16 +185,33 @@ block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))
                                [np.zeros((3,3)), np.zeros((3,3)), compound_block]])
 
 print(block_diag_matrix9)
-print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1.3, 1.1, 0.9, 0.7]), n = 100))
-print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1, 1, 1, 1 ]), n = 100))
-#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) #2 step SLOPE, perfect pattern recovery
-#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) #2 STEP Lasso, perfect support recovery
-print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
-print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1]), n = 100))
 
-#print(np.sign(pattern(np.array([0,0,-1.3,1.3, 2.7]))))
 
-#p=4 simulations
+my_W1 = np.array([-1.621111, 1.16656]) #np.random.multivariate_normal(np.zeros(2), np.array([[1, 2/3], [2/3, 1]]))
+my_W2 = np.array([-3.1, 1.7])
+total = 0
+my_matrix = block_diag_matrix9
+print('1/max eigval of C', 1/max(np.linalg.eigvals(my_matrix)))
+final = pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1, b_0=np.array([1, 1]), lambdas=np.array([1.2, 0.8]), t=0.33, n=100)
+for i in range(2, 100):
+     step_i = pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1, b_0=np.array([1, 1]), lambdas=np.array([1.2, 0.8]), t=0.33, n=i)
+     print(i, step_i, final - step_i)
+     # print(pgd_slope_b_0_ISTA(C=np.array([[1]]), W=np.array([2.78]), b_0=np.array([1]), lambdas=np.array([0]), t=1.46, n=i))
+print('small_step', pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1, b_0=np.array([1, 1]), lambdas=np.array([1.2, 0.8]), t=0.3, n=100))
+# for i in range(2, 100):
+# print(pgd_slope_b_0_ISTA(C=np.array([[1, 2/3], [2/3, 1]]), W=my_W2, b_0=np.array([1, 0]), lambdas=np.array([1.2, 0.8]), t=0.31, n=i))
+
+
+# print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1.3, 1.1, 0.9, 0.7]), n = 100))
+# print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1, 1, 1, 1 ]), n = 100))
+# print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 step SLOPE, perfect pattern recovery
+# print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 STEP Lasso, perfect support recovery
+# print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
+# print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1]), n = 100))
+
+# print(np.sign(pattern(np.array([0,0,-1.3,1.3, 2.7]))))
+
+# p=4 simulations
 '''
 # Define the range of x values
 x = np.linspace(0, 3, 24)  # Generates 10 points between 0 and 5
@@ -222,8 +299,8 @@ def plot_performance(b_0, C, lambdas, x, n):
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
 x = np.linspace(0, 3, 24)
-#plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=50)
-plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=500)
+# plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
+# plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=500)
 
 
 #p=2 simulations
