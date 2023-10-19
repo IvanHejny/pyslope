@@ -100,8 +100,8 @@ def patternMSE(b_0, C, lambdas, n, Cov = None):
 
 def patternMSE(b_0, C, lambdas, n, Cov=None):
     """
-    Calculate pattern recovery performance, mean squared error (MSE), and dimension reduction for a given pattern
-    vector 'b_0' using SLOPE optimization technique.
+    Calculate mean squared error (MSE), probability of pattern and support recovery, and dimension reduction
+    for a given pattern vector 'b_0', covariance C, and penalty sequence lambdas, using FISTA algorithm for SLOPE.
 
     Parameters:
         b_0 (array-like): True pattern vector to recover.
@@ -127,13 +127,16 @@ def patternMSE(b_0, C, lambdas, n, Cov=None):
     correct_support_recovery = 0
     MSE = 0
     dim_reduction = 0
+    stepsize_t = 1/max(np.linalg.eigvals(C))  # stepsize <= 1/max eigenvalue of
+    # C gives O(1/n^2) convergence;
+    # (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
 
     for i in range(n):
         # Generate random data with given covariance matrix
         W = np.random.multivariate_normal(np.zeros(p), Cov)
 
         # Perform SLOPE optimization using PGD and FISTA algorithm
-        u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=0.15, n=80)
+        u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=30)
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -173,20 +176,20 @@ C_block1 = np.array([[1, 0, 0, 0],
                      [0, rho, rho, 1]])
 
 array1 = np.ones(1)
-print(array1)
+#print(array1)
 array2 = (1-rho) * np.identity(6) + rho * np.ones((6, 6))
-print(array2)
+#print(array2)
 block_diag_matrix = np.block([[array1, np.zeros((1,6))],
                               [np.zeros((6,1)), array2]])
-print(block_diag_matrix)
+#print(block_diag_matrix)
 compound_block = (1-rho) * np.identity(3) + rho * np.ones((3, 3))
 block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))],
                               [np.zeros((3,3)), compound_block, np.zeros((3,3))],
                                [np.zeros((3,3)), np.zeros((3,3)), compound_block]])
 
-print(block_diag_matrix9)
+#print(block_diag_matrix9)
 
-
+'''
 my_W1 = np.array([-1.621111, 1.16656]) #np.random.multivariate_normal(np.zeros(2), np.array([[1, 2/3], [2/3, 1]]))
 my_W2 = np.array([-3.1, 1.7])
 total = 0
@@ -200,12 +203,12 @@ for i in range(2, 100):
 print('small_step', pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1, b_0=np.array([1, 1]), lambdas=np.array([1.2, 0.8]), t=0.3, n=100))
 # for i in range(2, 100):
 # print(pgd_slope_b_0_ISTA(C=np.array([[1, 2/3], [2/3, 1]]), W=my_W2, b_0=np.array([1, 0]), lambdas=np.array([1.2, 0.8]), t=0.31, n=i))
-
+'''
 
 # print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1.3, 1.1, 0.9, 0.7]), n = 100))
 # print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1, 1, 1, 1 ]), n = 100))
-# print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 step SLOPE, perfect pattern recovery
-# print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 STEP Lasso, perfect support recovery
+#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 step SLOPE, perfect pattern recovery
+#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 STEP Lasso, perfect support recovery
 # print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
 # print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1]), n = 100))
 
@@ -278,19 +281,23 @@ def plot_performance(b_0, C, lambdas, x, n):
         SupportLasso = np.append(SupportLasso, resultLasso[2])
 
     plt.figure(figsize=(6, 6))
-    plt.plot(x, MseSLOPE, label='SLOPE RMSE', color='green')  # Plot RMSE of SLOPE in green
-    plt.plot(x, PattSLOPE, label='SLOPE pattern recovery', color='blue')  # Plot probability of pattern recovery by SLOPE in blue
-    plt.plot(x, SupportSLOPE, label='SLOPE support recovery', color='black')  # Plot prob of support recovery by SLOPE in black
-    plt.plot(x, MseLasso, label='Lasso RMSE', color='orange')  # Plot RMSE of Lasso in orange
-    plt.plot(x, PattLasso, label='Lasso pattern recovery', color='red')  # Plot prob of pattern by Lasso in red
-    plt.plot(x, SupportLasso, label='Lasso support recovery', color='purple')  # Plot prob of support recovery by Lasso in purple
+    plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5)  # Plot RMSE of SLOPE
+    plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5)  # Plot RMSE of Lasso
+    plt.plot(x, PattSLOPE, label='pattern recovery SLOPE', color='green', linestyle='dashed', lw=1.8)  # Plot probability of pattern recovery by SLOPE
+    plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.8)  # Plot prob of pattern by Lasso
+    plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='dotted', lw=1.3)  # Plot prob of support recovery by SLOPE
+    plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='dotted', lw=1.3)  # Plot prob of support recovery by Lasso
 
-    plt.xlabel('penalty scaling $\sigma$')
-    plt.ylabel('Performance')
-    plt.title('Pattern Recovery and RMSE')
-    caption_text = f'Asymptotic performance with b_0={b_0}, C block diagonal with one compound 0.8 block for each cluster, and penalty scaling $\lambda = \sigma$ {lambdas}' #compound or block diagonal
-    plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
-    plt.legend()
+    # Increase the size of x-axis and y-axis tick labels
+    plt.xticks(fontsize=13)  # Change 12 to the desired font size for x-axis tick labels
+    plt.yticks(fontsize=13)  # Change 12 to the desired font size for y-axis tick labels
+
+    plt.xlabel(r'$\alpha$', fontsize=15) #penalty scaling
+    #plt.ylabel('Performance')
+    #plt.title('Pattern Recovery and RMSE')
+    caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
+    #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
+    #plt.legend()
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -299,7 +306,7 @@ def plot_performance(b_0, C, lambdas, x, n):
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
 x = np.linspace(0, 3, 24)
-# plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
+plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=25)
 # plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=500)
 
 
