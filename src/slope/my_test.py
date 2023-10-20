@@ -281,12 +281,12 @@ def plot_performance(b_0, C, lambdas, x, n):
         SupportLasso = np.append(SupportLasso, resultLasso[2])
 
     plt.figure(figsize=(6, 6))
-    plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5)  # Plot RMSE of SLOPE
-    plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5)  # Plot RMSE of Lasso
+    plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
+    plt.plot(x, MseLasso, label='RMSE Lasso', color='red', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
     plt.plot(x, PattSLOPE, label='pattern recovery SLOPE', color='green', linestyle='dashed', lw=1.8)  # Plot probability of pattern recovery by SLOPE
-    plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.8)  # Plot prob of pattern by Lasso
-    plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='dotted', lw=1.3)  # Plot prob of support recovery by SLOPE
-    plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='dotted', lw=1.3)  # Plot prob of support recovery by Lasso
+    plt.plot(x, PattLasso, label='pattern recovery Lasso', color='red', linestyle='dashed', lw=1.8)  # Plot prob of pattern by Lasso
+    plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
+    plt.plot(x, SupportLasso, label='support recovery Lasso', color='red', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
 
     # Increase the size of x-axis and y-axis tick labels
     plt.xticks(fontsize=13)  # Change 12 to the desired font size for x-axis tick labels
@@ -306,7 +306,8 @@ def plot_performance(b_0, C, lambdas, x, n):
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
 x = np.linspace(0, 3, 24)
-plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=25)
+# plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=25)
+plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 2/3], [2/3, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=50)
 # plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=500)
 
 
