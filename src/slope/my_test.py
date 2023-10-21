@@ -136,7 +136,7 @@ def patternMSE(b_0, C, lambdas, n, Cov=None):
         W = np.random.multivariate_normal(np.zeros(p), Cov)
 
         # Perform SLOPE optimization using PGD and FISTA algorithm
-        u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=30)
+        u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=20 )
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -163,7 +163,7 @@ def patternMSE(b_0, C, lambdas, n, Cov=None):
 alpha = 2/3
 #print(patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = 10*np.array([0.3, 0.3]), n = 100))
 
-rho = 0.9
+rho = 0.8
 #print(rho * np.identity(10) + (1-rho) * np.ones((10, 10)))
 C_compound = (1-rho) * np.identity(4) + rho * np.ones((4, 4))
 C_block = np.array([[1, rho, 0, 0],
@@ -262,7 +262,7 @@ plt.show()
 #'''
 
 
-def plot_performance(b_0, C, lambdas, x, n):
+def plot_performance(b_0, C, lambdas, x, n, Cov=None):
     PattSLOPE = np.empty(shape=(0,))
     MseSLOPE = np.empty(shape=(0,))
     PattLasso = np.empty(shape=(0,))
@@ -271,8 +271,8 @@ def plot_performance(b_0, C, lambdas, x, n):
     SupportLasso = np.empty(shape=(0,))
 
     for i in range(len(x)):
-        resultSLOPE = patternMSE(b_0=b_0, C=C, lambdas=x[i] * lambdas, n=n)
-        resultLasso = patternMSE(b_0=b_0, C=C, lambdas=x[i] * np.ones(len(b_0)), n=n)
+        resultSLOPE = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n)
+        resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * np.ones(len(b_0)), n=n)
         MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
         PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
         SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
@@ -280,23 +280,28 @@ def plot_performance(b_0, C, lambdas, x, n):
         PattLasso = np.append(PattLasso, resultLasso[1])
         SupportLasso = np.append(SupportLasso, resultLasso[2])
 
+        resultOLS = 0.5*(MseSLOPE[0] + MseLasso[0])
+
     plt.figure(figsize=(6, 6))
     plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
-    plt.plot(x, MseLasso, label='RMSE Lasso', color='red', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
-    plt.plot(x, PattSLOPE, label='pattern recovery SLOPE', color='green', linestyle='dashed', lw=1.8)  # Plot probability of pattern recovery by SLOPE
-    plt.plot(x, PattLasso, label='pattern recovery Lasso', color='red', linestyle='dashed', lw=1.8)  # Plot prob of pattern by Lasso
-    plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
-    plt.plot(x, SupportLasso, label='support recovery Lasso', color='red', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
+    plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
+    plt.plot(x, PattSLOPE, label='pattern recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
+    #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
+    #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
+    #plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
+
+    plt.scatter(0, resultOLS, color='red', label='RMSE OLS')
 
     # Increase the size of x-axis and y-axis tick labels
-    plt.xticks(fontsize=13)  # Change 12 to the desired font size for x-axis tick labels
-    plt.yticks(fontsize=13)  # Change 12 to the desired font size for y-axis tick labels
+    plt.xticks(fontsize=14)  # Change 12 to the desired font size for x-axis tick labels
+    plt.yticks(fontsize=14)  # Change 12 to the desired font size for y-axis tick labels
 
-    plt.xlabel(r'$\alpha$', fontsize=15) #penalty scaling
+    plt.xlabel(r'$\alpha$', fontsize=16) #penalty scaling
     #plt.ylabel('Performance')
     #plt.title('Pattern Recovery and RMSE')
     caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
     #plt.legend()
     plt.grid(True)
     plt.tight_layout()
@@ -305,11 +310,15 @@ def plot_performance(b_0, C, lambdas, x, n):
 
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
-x = np.linspace(0, 3, 24)
-# plot_performance(b_0=np.array([0, 1, 1, 1]), C=C_block1, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=25)
-plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 2/3], [2/3, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=50)
-# plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=500)
+x = np.linspace(0, 4, 24)
 
+#plot_performance(b_0=np.array([1, 1]), C=np.identity(2), lambdas=np.array([1.2, 0.8]), x=x, n=100)
+#plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=1500)
+#plot_performance(b_0=np.array([1, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=100)
+#plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
+#plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
+#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=50)
+plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=150, Cov=0.1*block_diag_matrix9)
 
 #p=2 simulations
 '''
