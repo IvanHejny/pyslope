@@ -302,7 +302,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None):
     caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
-    #plt.legend()
+    #plt.legend(fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -312,13 +312,13 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None):
 # Define b_0, C, lambdas, and x before calling the function
 x = np.linspace(0, 4, 24)
 
-#plot_performance(b_0=np.array([1, 1]), C=np.identity(2), lambdas=np.array([1.2, 0.8]), x=x, n=100)
-#plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=1500)
-#plot_performance(b_0=np.array([1, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=100)
+plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 0.6]), x=x, n=500)
+#plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
+#plot_performance(b_0=np.array([1, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
-#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=50)
-plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=150, Cov=0.1*block_diag_matrix9)
+#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000)
+#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000, Cov=0.09*block_diag_matrix9)
 
 #p=2 simulations
 '''
