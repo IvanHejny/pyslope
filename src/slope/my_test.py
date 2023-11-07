@@ -312,7 +312,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None):
 # Define b_0, C, lambdas, and x before calling the function
 x = np.linspace(0, 4, 24)
 
-plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 0.6]), x=x, n=500)
+#plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 0.6]), x=x, n=500)
 #plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
 #plot_performance(b_0=np.array([1, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
@@ -320,6 +320,72 @@ plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 
 #plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000)
 #plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000, Cov=0.09*block_diag_matrix9)
 
+
+
+
+def plot_performance(b_0, C1, C2, C3, lambdas, x, n, Cov1=None, Cov2=None, Cov3=None):
+    PattSLOPE1 = np.empty(shape=(0,))
+    PattSLOPE2 = np.empty(shape=(0,))
+    PattSLOPE3 = np.empty(shape=(0,))
+    MseSLOPE = np.empty(shape=(0,))
+    PattLasso = np.empty(shape=(0,))
+    MseLasso = np.empty(shape=(0,))
+    SupportSLOPE = np.empty(shape=(0,))
+    SupportLasso = np.empty(shape=(0,))
+
+    for i in range(len(x)):
+        resultSLOPE1 = patternMSE(b_0=b_0, C=C1, Cov=Cov1, lambdas=x[i] * lambdas, n=n)
+        resultSLOPE2 = patternMSE(b_0=b_0, C=C2, Cov=Cov2, lambdas=x[i] * lambdas, n=n)
+        resultSLOPE3 = patternMSE(b_0=b_0, C=C3, Cov=Cov3, lambdas=x[i] * lambdas, n=n)
+
+        PattSLOPE1 = np.append(PattSLOPE1, resultSLOPE1[1])
+        PattSLOPE2 = np.append(PattSLOPE2, resultSLOPE2[1])
+        PattSLOPE3 = np.append(PattSLOPE3, resultSLOPE3[1])
+
+    plt.figure(figsize=(6, 6))
+    #plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
+    #plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
+    plt.plot(x, PattSLOPE1, label=r'$\rho = 2/3-0.01$', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
+    plt.plot(x, PattSLOPE2, label=r'$\rho = 2/3$', color='blue', linestyle='dashed', lw=1.5)
+    plt.plot(x, PattSLOPE3, label=r'$\rho = 2/3+0.01$', color='red', linestyle='dashed', lw=1.5)
+    #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
+    #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
+    #plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
+
+    #plt.scatter(0, resultOLS, color='red', label='RMSE OLS')
+
+    # Increase the size of x-axis and y-axis tick labels
+    plt.xticks(fontsize=14)  # Change 12 to the desired font size for x-axis tick labels
+    plt.yticks(fontsize=14)  # Change 12 to the desired font size for y-axis tick labels
+
+    plt.xlabel(r'$\alpha$', fontsize=16) #penalty scaling
+    plt.ylabel('pattern recovery', fontsize=16)
+    #plt.title('Pattern Recovery and RMSE')
+    caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
+    #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
+    plt.legend(fontsize=14)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+alpha1 = 2/3-0.01
+alpha2 = 2/3
+alpha3 = 2/3+0.01
+C1 = np.array([[1, alpha1], [alpha1, 1]])
+C2 = np.array([[1, alpha2], [alpha2, 1]])
+C3 = np.array([[1, alpha3], [alpha3, 1]])
+sigma=0.2
+x = np.linspace(0, 10, 31)
+print(x)
+# Custom points to be added
+custom_points = np.array([(x[0]+x[1])/2, (x[1]+x[2])/2, (x[2]+x[3])/2])
+# Concatenate the custom points with the linspace array
+x_with_custom_points = np.concatenate((x, custom_points))
+# Sort the array for better visualization (optional)
+x = np.sort(x_with_custom_points)
+print(x)
+plot_performance(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x=x, n=2000, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
 #p=2 simulations
 '''
 # Define the range of x values
