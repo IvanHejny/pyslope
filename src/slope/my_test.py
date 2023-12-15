@@ -3,6 +3,7 @@ from src.slope.solvers import*
 #import math
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
+from scipy.interpolate import PchipInterpolator
 
 #from src.slope.solvers import pgd_slope, pgd_slope_without_n
 #from src.slope.utils import prox_slope
@@ -305,7 +306,8 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None):
     caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
-    #plt.legend(fontsize=14)
+
+    plt.legend(fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -321,7 +323,7 @@ x = np.linspace(0, 4, 24)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
 #plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000)
-#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000, Cov=0.09*block_diag_matrix9)
+plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000, Cov=0.3**2*block_diag_matrix9)
 
 
 
@@ -349,11 +351,15 @@ def plot_performance(b_0, C1, C2, C3, lambdas, x, n, Cov1=None, Cov2=None, Cov3=
     print(PattSLOPE2)
     print(PattSLOPE3)
     # Spline interpolation for smoother curve
-    x_smooth = np.linspace(x.min(), x.max(), 1000)  # Generate more points for smoothness
+    x_smooth = np.concatenate((x, np.linspace(x.min(), x.max(), 100))) #np.array([0, 0.05, 0.1, 0.14, 0.18, 0.5, 0.8, 1.2, 2])#np.linspace(x.min(), x.max(), 20)  # Generate more points for smoothness
+    x_smooth = np.sort(x_smooth)
 
     spl1 = make_interp_spline(x, PattSLOPE1)
+    spl1 = PchipInterpolator(x,PattSLOPE1)#
     spl2 = make_interp_spline(x, PattSLOPE2)
+    spl2 = PchipInterpolator(x,PattSLOPE2)#
     spl3 = make_interp_spline(x, PattSLOPE3)
+    spl3 = PchipInterpolator(x,PattSLOPE3)#
 
     PattSLOPE1_smooth = spl1(x_smooth)
     PattSLOPE2_smooth = spl2(x_smooth)
@@ -362,12 +368,14 @@ def plot_performance(b_0, C1, C2, C3, lambdas, x, n, Cov1=None, Cov2=None, Cov3=
     plt.figure(figsize=(6, 6))
     #plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
     #plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
-    plt.plot(x, PattSLOPE1, label=r'$\rho = 2/3-0.01$', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
-    plt.plot(x_smooth, PattSLOPE1_smooth, label=r'$\rho = 2/3-0.01$', color='green', linestyle='dotted', lw=1.5)
-    plt.plot(x, PattSLOPE2, label=r'$\rho = 2/3$', color='blue', linestyle='dashed', lw=1.5)
-    plt.plot(x_smooth, PattSLOPE2_smooth, label=r'$\rho = 2/3$', color='blue', linestyle='dotted', lw=1.5)
-    plt.plot(x, PattSLOPE3, label=r'$\rho = 2/3+0.01$', color='red', linestyle='dashed', lw=1.5)
-    plt.plot(x_smooth, PattSLOPE3_smooth, label=r'$\rho = 2/3+0.01$', color='red', linestyle='dotted', lw=1.5)
+
+
+    #plt.plot(x, PattSLOPE1, label=r'$\rho = 2/3-0.05$', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
+    plt.plot(x_smooth, PattSLOPE1_smooth, label=r'$\rho = 2/3-0.05$', color='green', linestyle='dashed', lw=1.5)
+    #plt.plot(x, PattSLOPE2, label=r'$\rho = 2/3$', color='blue', linestyle='dashed', lw=1.5)
+    plt.plot(x_smooth, PattSLOPE2_smooth, label=r'$\rho = 2/3$', color='blue', linestyle='dashed', lw=1.5)
+    #plt.plot(x, PattSLOPE3, label=r'$\rho = 2/3+0.05$', color='red', linestyle='dashed', lw=1.5)
+    plt.plot(x_smooth, PattSLOPE3_smooth, label=r'$\rho = 2/3+0.05$', color='red', linestyle='dashed', lw=1.5)
 
     #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
     #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
@@ -397,20 +405,25 @@ C1 = np.array([[1, alpha1], [alpha1, 1]])
 C2 = np.array([[1, alpha2], [alpha2, 1]])
 C3 = np.array([[1, alpha3], [alpha3, 1]])
 sigma=0.2
-x = np.linspace(0, 1, 11) #31 point between 0 and 10 was default
+x = np.linspace(0, 2, 11) #31 point between 0 and 10 was default
 print(x)
 # Custom points to be added
-#custom_points = np.array([(x[0]+x[1])/2, (x[1]+x[2])/2, (x[2]+x[3])/2])
+custom_points = np.array([(x[0]+x[1])/2, (x[1]+x[2])/2, (x[2]+x[3])/2])
 # Concatenate the custom points with the linspace array
-#x_with_custom_points = np.concatenate((x, custom_points))
+x_with_custom_points = np.concatenate((x, custom_points))
 # Sort the array for better visualization (optional)
-#x = np.sort(x_with_custom_points)
-#print(x)
+x = np.sort(x_with_custom_points)
+print(x)
 #x = np.linspace(0, 10, 31)
+custom_points = np.array([0, 0.05, 0.18, 0.5, 1.2, 2])
 
+custom_smooth = np.concatenate((custom_points, np.array([0.1, 0.14, 0.8])))
+custom_smooth = np.sort(custom_smooth)
+print('concatenated', custom_smooth)
 
-#plot_performance(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x=x, n=100, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
+#plot_performance(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x = custom_points, n=5000, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
 
+'''
 test_mean = 0
 for i in range(20):
     a=patternMSE(b_0=np.array([1, 0]), C=C1, lambdas=np.array([3, 2]), n=1000, Cov=sigma**2*C1)
@@ -418,7 +431,7 @@ for i in range(20):
     test_mean = test_mean + a[2]
     print('test_mean', test_mean/(i+1))
 print('test_mean', test_mean/20)
-
+'''
 
 
 
