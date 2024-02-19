@@ -323,7 +323,8 @@ x = np.linspace(0, 4, 24)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
 #plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000)
-plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000, Cov=0.3**2*block_diag_matrix9)
+
+#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000, Cov=0.3**2*block_diag_matrix9)
 
 
 
@@ -421,7 +422,7 @@ custom_smooth = np.concatenate((custom_points, np.array([0.1, 0.14, 0.8])))
 custom_smooth = np.sort(custom_smooth)
 print('concatenated', custom_smooth)
 
-#plot_performance(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x = custom_points, n=5000, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
+plot_performance(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x = custom_points, n=5000, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
 
 '''
 test_mean = 0
@@ -432,8 +433,6 @@ for i in range(20):
     print('test_mean', test_mean/(i+1))
 print('test_mean', test_mean/20)
 '''
-
-
 
 
 
@@ -476,9 +475,6 @@ plt.show()
 '''
 
 
-
-
-
 '''
 #first simulation attempts for MSE and Pattern recovery
 n = 200
@@ -496,8 +492,6 @@ for i in range(n):
 print('proportion of correct recoveries is', correct_recovery/n)
 print('MSE is', MSE/n)
 '''
-
-
 
 '''
 from scipy.stats import norm
