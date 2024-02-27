@@ -422,7 +422,7 @@ custom_smooth = np.concatenate((custom_points, np.array([0.1, 0.14, 0.8])))
 custom_smooth = np.sort(custom_smooth)
 print('concatenated', custom_smooth)
 
-plot_performance(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x = custom_points, n=5000, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
+plot_performance(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x = custom_points, n=100, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
 
 '''
 test_mean = 0
