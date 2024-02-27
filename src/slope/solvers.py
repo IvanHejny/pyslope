@@ -399,3 +399,4 @@ def pattern(u):
     result = unique_ranks * sign_u
 
     return result.astype(int)
+
