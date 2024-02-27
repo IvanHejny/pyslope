@@ -5,15 +5,10 @@ from scipy import sparse
 from src.slope.utils import dual_norm_slope, prox_slope, sl1_norm
 
 
-def pgd_slope(
-    X,
-    y,
-    lambdas,
-    fit_intercept=True,
-    gap_tol=1e-6,
-    max_it=10_000,
-    verbose=False,
-):
+def pgd_slope(X, y, lambdas, fit_intercept=True, gap_tol=1e-6, max_it=10_000, verbose=False):
+    """
+    Implements proximal gradient descent to minimize the SLOPE problem  0.5/n*||y-Xb||^2+ <lambda,|b|_(i)>
+    """
     n, p = X.shape
 
     residual = y.copy()

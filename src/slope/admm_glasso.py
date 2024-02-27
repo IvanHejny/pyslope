@@ -62,18 +62,6 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
     return x
 
 
-p = 9
-C = 0.8 * np.ones(9) + 0.2 * np.identity(9)
-A = np.zeros((p, p))
-for i in range(p - 1):
-    A[i][i] = 1
-    A[i][i + 1] = -1
-A[p - 1][0] = 1
-w = np.array([1, 1.1, 0.9, 2, 1, -2, 0, 1, 1]) #just a fixed arbitrary vector
-beta0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])
-lambdas = 0.4
-
-#print('admm_solution:\n', admm_glasso(C, A, w, beta0, lambdas))
 
 
 
