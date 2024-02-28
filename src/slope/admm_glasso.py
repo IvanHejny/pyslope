@@ -31,19 +31,21 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
     minimizes: u^TCu -u^T w + f_A'(b;u), where f_A(b)=lam*||Ab||_1 is the generalized Lasso penalty.
     """
     p = len(beta0)
-    E_1 = np.diag(np.sign(A @ beta0))  # sgn(A beta0)
+    E_1 = np.diag(np.sign(A @ beta0))  # sgn(A beta0): k x k diagonal sign matrix
     ind = np.where(np.diag(E_1) == 0)[0]
-    F_0 = A[ind, :]  # (I-|sgn(A*beta0)|)A
-    w_tilde = w - lambdas * np.ones(p).T @ E_1 @ A  # w-lambda* 1^T * sgn(A beta0)
+    F_0 = A[ind, :]  # F_0*x = (I-|sgn(A*beta0)|)A*x
 
-    #minimizing
+    w_tilde = w - lambdas * np.ones(A.shape[0]).T @ E_1 @ A  #w-lambda* 1^T * sgn(A beta0)A
 
+    #minimizing x^TCx -x^T w_tilde + lam*||F_0 x||_1
+
+    m = F_0.shape[0]  # number of rows in F0
     if x0 is None:
         x0 = np.zeros(p)
     if z0 is None:
-        z0 = np.zeros(F_0.shape[0])
+        z0 = np.zeros(m)
     if u0 is None:
-        u0 = np.zeros(F_0.shape[0])
+        u0 = np.zeros(m)
 
     x = x0
     z = z0

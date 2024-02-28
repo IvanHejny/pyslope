@@ -3,19 +3,46 @@ from admm_glasso import*
 
 #ADMM_GLASSO
 p = 9
-alpha = 0.8
+alpha = 0.1
 C = alpha * np.ones(9) + (1-alpha) * np.identity(9)
 A = np.zeros((p, p))
 for i in range(p - 1):
     A[i][i] = 1
-    A[i][i + 1] = -1
-A[p - 1][0] = 1
+    A[i][i + 1] = -1 #enables clustering
+A[p - 1][0] = 1 #enables sparsity
 w = np.array([1, 1.1, 0.9, 2, 1, -2, 0, 1, 1]) #just a fixed arbitrary vector
 beta0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])
-lambdas = 0.4
+lambdas = 4
 #pattern recovery for small correlation alpha and large penalty lambdas
 
 print('admm_solution:\n', admm_glasso(C, A, w, beta0, lambdas))
+
+AL = np.zeros((2*p-1, p))
+for i in range(p - 1):
+    AL[i][i] = 1
+    AL[i][i + 1] = -1
+for i in range(p-1, 2*p -1):
+    AL[i][i-p] = 1
+#print(AL)
+print('admm_solution:\n', np.round(admm_glasso(C, AL, w, beta0, lambdas), 4))
+'''
+A0 = np.zeros((p-1, p))
+for i in range(p - 1):
+    A0[i][i] = 1
+    A0[i][i + 1] = -1
+print(A0)
+A2 = np.zeros((p+1, p))
+for i in range(1, p):
+    A2[i][i-1] = 1
+    A2[i][i] = -1
+A2[0][0] = 1
+A2[p][p-1] = 1
+print('A0:\n', A0)
+#print(A0.shape[0],A0.shape[1])
+print('A2:\n', A2)
+print('admm_solutionA0:\n', admm_glasso(C, A0, w, beta0, lambdas))
+print('admm_solutionA2:\n', admm_glasso(C, A2, w, beta0, lambdas))
+'''
 
 #prox step:
 '''
@@ -63,8 +90,9 @@ for i in range(40):
     print("pdg_slope_b_0_ISTA: [0, 1]", i+1, one_solution) #b_0 = [0,1] all patterns with positive second entry attainable
 '''
 
-
+#MAIN TEST
 #prox_slope, ISTA, FISTA
+'''
 b_0_test0 = np.array([0, 0, 0, 0])
 b_0_test1 = np.array([1, 1, -1, -1])
 b_0_test01 = np.array([0, 0, 1, 1])
@@ -85,7 +113,7 @@ print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60.0, 50.0, -5.0, 10.0], 
 print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60, 50, -5, 10], [65, 42, 40, 40])) #correct after resolved type issues
 print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.35, n = 50))
 print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.35, n = 50))
-
+'''
 
 
 #Further ISTA, FISTA examples
