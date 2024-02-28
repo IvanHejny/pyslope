@@ -24,7 +24,7 @@ for i in range(p - 1):
 for i in range(p-1, 2*p -1):
     AL[i][i-p] = 1
 #print(AL)
-print('admm_solution:\n', np.round(admm_glasso(C, AL, w, beta0, lambdas), 4))
+#print('admm_solution:\n', np.round(admm_glasso(C, AL, w, beta0, lambdas), 4))
 '''
 A0 = np.zeros((p-1, p))
 for i in range(p - 1):
@@ -44,23 +44,41 @@ print('admm_solutionA0:\n', admm_glasso(C, A0, w, beta0, lambdas))
 print('admm_solutionA2:\n', admm_glasso(C, A2, w, beta0, lambdas))
 '''
 
-#prox step:
-'''
-C=np.array([[1, 0], [ 0, 1]])
-print(C)
-print(C@np.array([2, 3]))
-W = np.array([5,4])
-lambdas = np.array([1,3])
-b_00 = np.array([0,0])
-u_0 = np.array([0,0])
-stepsize_t = 0.4
-prox_step = prox_slope_b_0(b_00, u_0-stepsize_t*(C@u_0-W), lambdas*stepsize_t)
-print(prox_step)
-prox_step = prox_slope_b_0(b_00, prox_step-stepsize_t*(C@prox_step-W), lambdas*stepsize_t)
-print(prox_step)
-'''
 
-#ISTA/FISTA
+
+# compound symmetric covariance matrix, simulations with Lasso/Fused Lasso Penalty
+for i in range(20):
+    W = np.random.multivariate_normal(np.zeros(p), C)
+    print('admm_AL:', np.round(admm_glasso(C, AL, W, beta0, lambdas), 3))
+# block diagonal with 3 compound blocks 3x3, simulations with Lasso/Fused Lasso Penalty
+alpha = 0.8
+compound_block = (1-alpha) * np.identity(3) + alpha * np.ones((3, 3))
+block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))],
+                              [np.zeros((3,3)), compound_block, np.zeros((3,3))],
+                               [np.zeros((3,3)), np.zeros((3,3)), compound_block]])
+print('block_diag_matrix9:\n', block_diag_matrix9)
+for i in range(20):
+    W = np.random.multivariate_normal(np.zeros(p), block_diag_matrix9)
+    print('admm_AL_comp:', np.round(admm_glasso(block_diag_matrix9, AL, W, beta0, 40), 3))
+    print('pgd_slope_comp',  np.round(pgd_slope_b_0_FISTA(C=block_diag_matrix9, W=W, b_0=beta0, lambdas=(p/(2*p-1))*40*np.array([1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.6]), t=0.35, n=50), decimals=3))
+
+    # prox step:
+    '''
+    C=np.array([[1, 0], [ 0, 1]])
+    print(C)
+    print(C@np.array([2, 3]))
+    W = np.array([5,4])
+    lambdas = np.array([1,3])
+    b_00 = np.array([0,0])
+    u_0 = np.array([0,0])
+    stepsize_t = 0.4
+    prox_step = prox_slope_b_0(b_00, u_0-stepsize_t*(C@u_0-W), lambdas*stepsize_t)
+    print(prox_step)
+    prox_step = prox_slope_b_0(b_00, prox_step-stepsize_t*(C@prox_step-W), lambdas*stepsize_t)
+    print(prox_step)
+    '''
+
+    #ISTA/FISTA
 '''
 C = np.array([[1, 0.5], [0.5, 1]])
 W = np.array([5.0, 4.0])
