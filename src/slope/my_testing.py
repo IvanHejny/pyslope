@@ -2,6 +2,24 @@ from src.slope.solvers import*
 from admm_glasso import*
 
 #ADMM_GLASSO
+p = 2
+AFLsmall = np.zeros((2 * p - 1, p))
+for i in range(p - 1):
+    AFLsmall[i][i] = 1
+    AFLsmall[i][i + 1] = -1 #clustering penalty
+for i in range(p-1, 2*p -1):
+    AFLsmall[i][i - (p-1)] = 1.1 #sparsity penalty
+print('AFL\n:', AFLsmall)
+C = np.array([[1, 0], [0, 1]])
+b_0 = np.array([0, 1])
+for i in range(20):
+    W = np.random.multivariate_normal(np.zeros(p), C)
+    glasso_AFLsmall = admm_glasso(C, AFLsmall, W, b_0, 40, iter=100)
+    print('admm_solution:', np.round(glasso_AFLsmall, 3))
+
+
+
+
 p = 9
 alpha = 0.1
 C = alpha * np.ones(9) + (1-alpha) * np.identity(9)
@@ -13,17 +31,21 @@ A[p - 1][0] = 1 #enables sparsity
 w = np.array([1, 1.1, 0.9, 2, 1, -2, 0, 1, 1]) #just a fixed arbitrary vector
 beta0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])
 lambdas = 4
+print('A:\n', A)
 #pattern recovery for small correlation alpha and large penalty lambdas
-
 print('admm_solution:\n', admm_glasso(C, A, w, beta0, lambdas))
 
-AL = np.zeros((2*p-1, p))
+
+AFL = np.zeros((2 * p - 1, p))
 for i in range(p - 1):
-    AL[i][i] = 1
-    AL[i][i + 1] = -1
+    AFL[i][i] = 1
+    AFL[i][i + 1] = -1 #clustering penalty
 for i in range(p-1, 2*p -1):
-    AL[i][i-p] = 1
-#print(AL)
+    AFL[i][i - (p-1)] = 1 #sparsity penalty
+print('AFL\n:', AFL)
+
+
+
 #print('admm_solution:\n', np.round(admm_glasso(C, AL, w, beta0, lambdas), 4))
 '''
 A0 = np.zeros((p-1, p))
@@ -42,16 +64,35 @@ print('A0:\n', A0)
 print('A2:\n', A2)
 print('admm_solutionA0:\n', admm_glasso(C, A0, w, beta0, lambdas))
 print('admm_solutionA2:\n', admm_glasso(C, A2, w, beta0, lambdas))
+
+AFL3 = np.zeros((p+2, p)) #Fused Lasso + Lasso on the first three
+for i in range(p - 1):
+    AFL3[i][i] = 1
+    AFL3[i][i + 1] = -1 #clustering penalty
+for i in range(p-1, p+2):
+    AFL3[i][i - (p-1)] = 0.8 #sparsity penalty
+print('AFL3\n:', AFL3)
+
+AFLtuned = np.zeros((2 * p - 1, p)) #does not recover the pattern for beta0 = [0, 0, 0, 1, 1, 1, 2, 2, 2] despite the tuning
+for i in range(p - 1):
+    AFLtuned[i][i] = 1
+    AFLtuned[i][i + 1] = -1 #clustering penalty
+for i in range(p-1, p+2):
+    AFLtuned[i][i - (p-1)] = 5 #sparsity penalty strong for first 3
+for i in range(p+2, 2*p -1):
+    AFLtuned[i][i - (p-1)] = 0.1 #sparsity penalty weak for last 6
+print('AFLtuned\n:', AFLtuned)
 '''
 
 
-
 # compound symmetric covariance matrix, simulations with Lasso/Fused Lasso Penalty
-for i in range(20):
-    W = np.random.multivariate_normal(np.zeros(p), C)
-    print('admm_AL:', np.round(admm_glasso(C, AL, W, beta0, lambdas), 3))
+#for i in range(20):
+#    W = np.random.multivariate_normal(np.zeros(p), C)
+#    print('admm_AFL:', np.round(admm_glasso(C, AFL, W, beta0, lambdas), 3))
+
 # block diagonal with 3 compound blocks 3x3, simulations with Lasso/Fused Lasso Penalty
-alpha = 0.8
+#'''
+alpha = 0.5
 compound_block = (1-alpha) * np.identity(3) + alpha * np.ones((3, 3))
 block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))],
                               [np.zeros((3,3)), compound_block, np.zeros((3,3))],
@@ -59,24 +100,38 @@ block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))
 print('block_diag_matrix9:\n', block_diag_matrix9)
 for i in range(20):
     W = np.random.multivariate_normal(np.zeros(p), block_diag_matrix9)
-    print('admm_AL_comp:', np.round(admm_glasso(block_diag_matrix9, AL, W, beta0, 40), 3))
-    print('pgd_slope_comp',  np.round(pgd_slope_b_0_FISTA(C=block_diag_matrix9, W=W, b_0=beta0, lambdas=(p/(2*p-1))*40*np.array([1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.6]), t=0.35, n=50), decimals=3))
+    admm_AFL_comp = admm_glasso(block_diag_matrix9, AFLtuned, W, beta0, 40, iter=100)
+    pgd_slope_comp = pgd_slope_b_0_FISTA(C=block_diag_matrix9, W=W, b_0=beta0, lambdas=40 * np.array([1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.6]), t=0.35, n=150)
+    print('admm_AFL_comp:', np.round(admm_AFL_comp, 3))
+    #print('pgd_slope_comp', np.round(pgd_slope_comp, 3))
+#'''
 
+
+#testing if admm lasso = pgd lasso, sanity check! Works fine
+'''
+for i in range(20):
+    W = np.random.multivariate_normal(np.zeros(p), block_diag_matrix9)
+    admm_ALasso_comp = admm_glasso(block_diag_matrix9, np.identity(p), W, beta0, 40, iter=100)
+    pgd_slope_comp = pgd_slope_b_0_FISTA(C=block_diag_matrix9, W=W, b_0=beta0, lambdas=40 * np.array([1, 1, 1, 1, 1, 1, 1, 1, 1]), t=0.35, n=150)
+
+    #print('admm_ALasso_comp:', np.round(admm_ALasso_comp,3))
+    #print('pgd_slope_comp', np.round(pgd_slope_comp, 3))
+    print('difference:', np.round(admm_ALasso_comp - pgd_slope_comp,4))# correct, the algorithms admm and pgd converge return the same
     # prox step:
-    '''
-    C=np.array([[1, 0], [ 0, 1]])
-    print(C)
-    print(C@np.array([2, 3]))
-    W = np.array([5,4])
-    lambdas = np.array([1,3])
-    b_00 = np.array([0,0])
-    u_0 = np.array([0,0])
-    stepsize_t = 0.4
-    prox_step = prox_slope_b_0(b_00, u_0-stepsize_t*(C@u_0-W), lambdas*stepsize_t)
-    print(prox_step)
-    prox_step = prox_slope_b_0(b_00, prox_step-stepsize_t*(C@prox_step-W), lambdas*stepsize_t)
-    print(prox_step)
-    '''
+
+C=np.array([[1, 0], [ 0, 1]])
+print(C)
+print(C@np.array([2, 3]))
+W = np.array([5,4])
+lambdas = np.array([1,3])
+b_00 = np.array([0,0])
+u_0 = np.array([0,0])
+stepsize_t = 0.4
+prox_step = prox_slope_b_0(b_00, u_0-stepsize_t*(C@u_0-W), lambdas*stepsize_t)
+print(prox_step)
+prox_step = prox_slope_b_0(b_00, prox_step-stepsize_t*(C@prox_step-W), lambdas*stepsize_t)
+print(prox_step)
+'''
 
     #ISTA/FISTA
 '''

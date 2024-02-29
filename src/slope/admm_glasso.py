@@ -68,14 +68,57 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
 
 
 #print('A:\n', A)
-'''
-beta0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])
-E_1 = np.diag(np.sign(A @ beta0))
+#'''
+p=9
+A = np.zeros((p-1, p))
+for i in range(p - 1):
+    A[i][i] = 1
+    A[i][i + 1] = -1
+print('A:\n', A)
+
+beta0small = np.array([0, 1])
+beta0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]) #px1 vector
+
+AFL = np.zeros((2 * p - 1, p)) # mxp Gen Lasso matrix
+for i in range(p - 1):
+    AFL[i][i] = 1
+    AFL[i][i + 1] = -1 #clustering penalty
+for i in range(p-1, 2*p -1):
+    AFL[i][i - (p-1)] = 1 #sparsity penalty
+#print('AFL\n:', AFL)
+
+
+p = 2
+AFLsmall = np.zeros((2 * p - 1, p))
+for i in range(p - 1):
+    AFLsmall[i][i] = 1
+    AFLsmall[i][i + 1] = -1 #clustering penalty
+for i in range(p-1, 2*p -1):
+    AFLsmall[i][i - (p-1)] = 10 #sparsity penalty
+#print('AFL\n:', AFLsmall)
+
+
+
+
+my_beta0 = beta0small
+my_A = AFLsmall
+
+#my_beta0 = beta0
+#my_A = AFL
+#my_A = np.identity(9) #Lasso penalty
+#my_A = A #Fused Lasso penalty
+print('my_beta0:', my_beta0)
+print('my_A:\n', my_A)
+E_1 = np.diag(np.sign(my_A @ my_beta0)) #sgn(A*beta0) mxm matrix
 print('E_1:\n', E_1)
 ind = np.where(np.diag(E_1) == 0)[0]
 print('ind:', ind)
-F_0 = A[ind, :]
+F_0 = my_A[ind, :]
 print('F_0:\n', F_0)
-print('colsum', E_1 @ A, np.ones(p).T @ E_1 @ A)
-'''
+print('colsum:\n', E_1 @ my_A, np.ones(my_A.shape[0]).T @ E_1 @ my_A)
+#'''
+
+
+
+
 
