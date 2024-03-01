@@ -2,47 +2,124 @@ from src.slope.solvers import*
 from admm_glasso import*
 
 #ADMM_GLASSO
+# penalty matrices in generalized lasso
+def AFL(p, a=1): #Fused Lasso + Lasso, tuned by a
+    A = np.zeros((2 * p - 1, p))
+    for i in range(p - 1):
+        A[i][i] = 1
+        A[i][i + 1] = -1  # clustering penalty
+    for i in range(p - 1, 2 * p - 1):
+        A[i][i - (p - 1)] = a  # sparsity penalty
+    return A
+
+def AFLmon(p, b=0.1): # Fused Lasso + Monotone Lasso penalty
+    A = np.zeros((2 * p - 1, p))
+    for i in range(p - 1):
+        A[i][i] = 1
+        A[i][i + 1] = -1  # clustering penalty
+    for i in range(p - 1, 2 * p - 1):
+        A[i][i - (p - 1)] = 1+b*(i-(p-1)+1)  # sparsity penalty
+    return A
+print('AFLmon:\n', AFLmon(7, 0.1))
+
+'''
 p = 2
-AFLsmall = np.zeros((2 * p - 1, p))
+AFL2 = np.zeros((2 * p - 1, p))
 for i in range(p - 1):
-    AFLsmall[i][i] = 1
-    AFLsmall[i][i + 1] = -1 #clustering penalty
+    AFL2[i][i] = 1
+    AFL2[i][i + 1] = -1 #clustering penalty
 for i in range(p-1, 2*p -1):
-    AFLsmall[i][i - (p-1)] = 1.1 #sparsity penalty
-print('AFL\n:', AFLsmall)
-C = np.array([[1, 0], [0, 1]])
-b_0 = np.array([0, 1])
-for i in range(20):
-    W = np.random.multivariate_normal(np.zeros(p), C)
-    glasso_AFLsmall = admm_glasso(C, AFLsmall, W, b_0, 40, iter=100)
-    print('admm_solution:', np.round(glasso_AFLsmall, 3))
-
-
-
+    AFL2[i][i - (p - 1)] = 1.7 #sparsity penalty
+#print('AFL\n:', AFL2)
 
 p = 9
-alpha = 0.1
-C = alpha * np.ones(9) + (1-alpha) * np.identity(9)
 A = np.zeros((p, p))
 for i in range(p - 1):
     A[i][i] = 1
     A[i][i + 1] = -1 #enables clustering
 A[p - 1][0] = 1 #enables sparsity
-w = np.array([1, 1.1, 0.9, 2, 1, -2, 0, 1, 1]) #just a fixed arbitrary vector
-beta0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])
-lambdas = 4
-print('A:\n', A)
-#pattern recovery for small correlation alpha and large penalty lambdas
-print('admm_solution:\n', admm_glasso(C, A, w, beta0, lambdas))
+#w = np.array([1, 1.1, 0.9, 2, 1, -2, 0, 1, 1]) #just a fixed arbitrary vector
 
 
-AFL = np.zeros((2 * p - 1, p))
+AFL9 = np.zeros((2 * p - 1, p))
 for i in range(p - 1):
-    AFL[i][i] = 1
-    AFL[i][i + 1] = -1 #clustering penalty
+    AFL9[i][i] = 1
+    AFL9[i][i + 1] = -1 #clustering penalty
 for i in range(p-1, 2*p -1):
-    AFL[i][i - (p-1)] = 1 #sparsity penalty
-print('AFL\n:', AFL)
+    AFL9[i][i - (p - 1)] = 1 #sparsity penalty
+#print('AFL\n:', AFL)
+
+p=7
+Amon = np.zeros((2 * p - 1, p))
+for i in range(p - 1):
+    Amon[i][i] = 1
+    Amon[i][i + 1] = -1  # clustering penalty
+for i in range(p - 1, 2 * p - 1):
+    Amon[i][i - (p - 1)] = 1+0.1*(i-(p-1)+1)  # sparsity penalty
+print('Amon:\n', Amon)
+'''
+
+
+# signal vector betas
+beta02 = np.array([0, 1])  # recovery for tuned AFL a>>1
+beta09 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])  # recovery seemingly impossible irrespective of tuning AFL
+# the error in pattern always occurs in the middle cluster next to zero cluster, never in the last cluster
+beta03 = np.array([0,1,1])  # recovery for tuned AFL a>>1
+beta030 = np.array([0, 0, 1])  # recovery for tuned AFL a>>1
+beta04 = np.array([0, 0, 1, 1])  # recovery for tuned AFL a>>1
+beta043 = np.array([0, 1, 1, 2])  # fails to recover the middle cluster
+beta07 = np.array([0, 1, 1, 2, 2, 3, 3])  # fails to recover the two middle clusters, but recovers the 0 and the last
+
+# printing different quantities appearing in the ADMM algorithm
+my_beta0 = beta043
+my_A = AFLmon(4, 0.1) # AFL(4,1.3) # AFL(7,1)
+
+#my_beta0 = beta0
+#my_A = AFL
+#my_A = np.identity(9) #Lasso penalty
+#my_A = A #Fused Lasso penalty
+print('my_beta0:', my_beta0)
+print('my_A:\n', my_A)
+E_1 = np.diag(np.sign(my_A @ my_beta0))  # sgn(A*beta0) mxm matrix
+print('E_1:\n', E_1)
+ind = np.where(np.diag(E_1) == 0)[0]
+print('ind:', ind)
+F_0 = my_A[ind, :]
+print('F_0:\n', F_0)
+print('colsum:\n', E_1 @ my_A, np.ones(my_A.shape[0]).T @ E_1 @ my_A)
+
+# covariance matrix
+alpha = 0.7
+C2 = np.array([[1, alpha], [alpha, 1]])
+C9_comp = alpha * np.ones(9) + (1-alpha) * np.identity(9)  # compound symmetric covariance matrix
+
+c_block = (1 - alpha) * np.identity(3) + alpha * np.ones((3, 3))
+C9_block = np.block([[c_block, np.zeros((3, 3)), np.zeros((3, 3))], # block diagonal with 3 compound blocks 3x3
+                     [np.zeros((3,3)), c_block, np.zeros((3, 3))],
+                     [np.zeros((3,3)), np.zeros((3,3)), c_block]])
+
+def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic error from the glasso
+    p = len(beta0)
+    for i in range(n):
+        W = np.random.multivariate_normal(np.zeros(p), C)
+        glasso_sample = admm_glasso(C, A, W, beta0, lambdas, iter)
+        #print('glasso_sol:', np.round(glasso_sample, 3))
+        print('glasso_sol:', pattern(np.round(glasso_sample, 3)))
+
+# print(glasso_sampler(C2, AFL(2, a=1.5), beta02, 40))
+# print(glasso_sampler(np.identity(3), AFL(3, a=1.5), beta030, 40))
+# print(glasso_sampler(C9_comp, AFL(9), beta09, 40))
+# print(glasso_sampler(np.identity(4), AFL(4, a=1.2), beta043, 40))
+# print(glasso_sampler(np.identity(7), AFL(7, a=1.2), beta07, 40))
+
+#print(glasso_sampler(np.identity(7), AFLmon(7,0.1), beta07, 40))
+print(glasso_sampler(C9_block, AFLmon(9, 0.1), beta09, 40))
+
+#for i in range(20):
+#    W = np.random.multivariate_normal(np.zeros(p), C)
+#    glasso_AFLsmall = admm_glasso(C, AFL2, W, beta02, 40, iter=100)
+#    print('admm_solution:', np.round(glasso_AFLsmall, 3))
+
 
 
 
@@ -73,25 +150,27 @@ for i in range(p-1, p+2):
     AFL3[i][i - (p-1)] = 0.8 #sparsity penalty
 print('AFL3\n:', AFL3)
 
-AFLtuned = np.zeros((2 * p - 1, p)) #does not recover the pattern for beta0 = [0, 0, 0, 1, 1, 1, 2, 2, 2] despite the tuning
+AFL9tuned = np.zeros((2 * p - 1, p)) #does not recover the pattern for beta0 = [0, 0, 0, 1, 1, 1, 2, 2, 2] despite the tuning
 for i in range(p - 1):
-    AFLtuned[i][i] = 1
-    AFLtuned[i][i + 1] = -1 #clustering penalty
+    AFL9tuned[i][i] = 1
+    AFL9tuned[i][i + 1] = -1 #clustering penalty
 for i in range(p-1, p+2):
-    AFLtuned[i][i - (p-1)] = 5 #sparsity penalty strong for first 3
+    AFL9tuned[i][i - (p-1)] = 5 #sparsity penalty strong for first 3
 for i in range(p+2, 2*p -1):
-    AFLtuned[i][i - (p-1)] = 0.1 #sparsity penalty weak for last 6
-print('AFLtuned\n:', AFLtuned)
+    AFL9tuned[i][i - (p-1)] = 0.1 #sparsity penalty weak for last 6
+print('AFLtuned\n:', AFL9tuned)
 '''
 
 
 # compound symmetric covariance matrix, simulations with Lasso/Fused Lasso Penalty
+#alpha = 0.1
+#C = alpha * np.ones(9) + (1-alpha) * np.identity(9)
 #for i in range(20):
 #    W = np.random.multivariate_normal(np.zeros(p), C)
 #    print('admm_AFL:', np.round(admm_glasso(C, AFL, W, beta0, lambdas), 3))
 
 # block diagonal with 3 compound blocks 3x3, simulations with Lasso/Fused Lasso Penalty
-#'''
+'''
 alpha = 0.5
 compound_block = (1-alpha) * np.identity(3) + alpha * np.ones((3, 3))
 block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))],
@@ -100,11 +179,13 @@ block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))
 print('block_diag_matrix9:\n', block_diag_matrix9)
 for i in range(20):
     W = np.random.multivariate_normal(np.zeros(p), block_diag_matrix9)
-    admm_AFL_comp = admm_glasso(block_diag_matrix9, AFLtuned, W, beta0, 40, iter=100)
+    admm_AFL_comp = admm_glasso(block_diag_matrix9, AFL, W, beta0, 40, iter=100)
     pgd_slope_comp = pgd_slope_b_0_FISTA(C=block_diag_matrix9, W=W, b_0=beta0, lambdas=40 * np.array([1.4,1.3,1.2,1.1,1.0,0.9,0.8,0.7,0.6]), t=0.35, n=150)
     print('admm_AFL_comp:', np.round(admm_AFL_comp, 3))
     #print('pgd_slope_comp', np.round(pgd_slope_comp, 3))
-#'''
+'''
+
+
 
 
 #testing if admm lasso = pgd lasso, sanity check! Works fine
