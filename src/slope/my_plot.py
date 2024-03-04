@@ -1,9 +1,11 @@
 import numpy as np
 from src.slope.solvers import*
+from admm_glasso import*
 #import math
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
 from scipy.interpolate import PchipInterpolator
+
 
 #from src.slope.solvers import pgd_slope, pgd_slope_without_n
 #from src.slope.utils import prox_slope
@@ -100,7 +102,7 @@ def patternMSE(b_0, C, lambdas, n, Cov = None):
 '''
 
 
-def patternMSE(b_0, C, lambdas, n, Cov=None):
+def patternMSE(b_0, C, lambdas, n, Cov=None, glasso=False, A = None):
     """
     Calculate mean squared error (MSE), probability of pattern and support recovery, and dimension reduction
     for a given pattern vector 'b_0', covariance C, and penalty sequence lambdas, using FISTA algorithm for SLOPE.
@@ -129,16 +131,21 @@ def patternMSE(b_0, C, lambdas, n, Cov=None):
     correct_support_recovery = 0
     MSE = 0
     dim_reduction = 0
-    stepsize_t = 1/max(np.linalg.eigvals(C))  # stepsize <= 1/max eigenvalue of
-    # C gives O(1/n^2) convergence;
-    # (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W))
+    stepsize_t = 1/max(np.linalg.eigvals(C))  # stepsize <= 1/max eigenvalue of C;
+    # (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W));
+    # gives O(1/n^2) convergence;
 
     for i in range(n):
         # Generate random data with given covariance matrix
         W = np.random.multivariate_normal(np.zeros(p), Cov)
 
         # Perform SLOPE optimization using PGD and FISTA algorithm
-        u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=20 )
+        if glasso == True:
+            if A is None:
+                A = AFLmon(p, b=0.1)
+            u_hat = admm_glasso(C=C, A=A, w=W, beta0=b_0, lambdas=1.0)
+        else:
+            u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=20 )
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -148,9 +155,9 @@ def patternMSE(b_0, C, lambdas, n, Cov=None):
         dim_reduction += p - len(np.unique(u_hat))
 
         # Check pattern and support recoveries
-        if all(pattern(b_0 + 0.00001 * u_hat) == b_0):
+        if all(pattern(b_0 + 0.0001 * np.round(u_hat, 3)) == b_0):
             correct_pattern_recovery += 1
-        if all(np.sign(pattern(b_0 + 0.00001 * u_hat)) == np.sign(b_0)):
+        if all(np.sign(pattern(b_0 + 0.0001 * np.round(u_hat, 3))) == np.sign(b_0)):
             correct_support_recovery += 1
 
     # Calculate average metrics over simulations
@@ -162,8 +169,9 @@ def patternMSE(b_0, C, lambdas, n, Cov=None):
     return rmse, pattern_recovery_rate, support_recovery_rate, avg_dim_reduction
 
 
-alpha = 2/3
-#print(patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = 10*np.array([0.3, 0.3]), n = 100))
+alpha = 0
+#print('patternMSE:', patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = 5*np.array([0.3, 0.3]), n = 100, glasso = True, glasso_penalty=8))
+
 
 rho = 0.8
 #print(rho * np.identity(10) + (1-rho) * np.ones((10, 10)))
@@ -189,7 +197,7 @@ block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))
                               [np.zeros((3,3)), compound_block, np.zeros((3,3))],
                                [np.zeros((3,3)), np.zeros((3,3)), compound_block]])
 
-#print(block_diag_matrix9)
+print(block_diag_matrix9)
 
 '''
 my_W1 = np.array([-1.621111, 1.16656]) #np.random.multivariate_normal(np.zeros(2), np.array([[1, 2/3], [2/3, 1]]))
@@ -207,12 +215,12 @@ print('small_step', pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1
 # print(pgd_slope_b_0_ISTA(C=np.array([[1, 2/3], [2/3, 1]]), W=my_W2, b_0=np.array([1, 0]), lambdas=np.array([1.2, 0.8]), t=0.31, n=i))
 '''
 
-# print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1.3, 1.1, 0.9, 0.7]), n = 100))
+# print('patternMSE:', patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1.3, 1.1, 0.9, 0.7]), n = 100, glasso = False, glasso_penalty=40))
 # print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1, 1, 1, 1 ]), n = 100))
-#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 2*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 step SLOPE, perfect pattern recovery
-#print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 STEP Lasso, perfect support recovery
-# print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
-# print(patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1]), n = 100))
+# print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 15*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 step SLOPE, perfect pattern recovery
+# print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 STEP Lasso, perfect support recovery
+print('SLOPE_patMSE:', patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = 10*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
+print('glasso_patMSE:', patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = 0*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100, glasso = True, A = 10* AFLmon(9, 0.1)))
 
 
 
@@ -266,41 +274,81 @@ plt.show()
 #'''
 
 
-def plot_performance(b_0, C, lambdas, x, n, Cov=None):
+def plot_performance(b_0, C, lambdas, x, n, Cov=None, glasso=False, A = None, smooth = None):
     PattSLOPE = np.empty(shape=(0,))
     MseSLOPE = np.empty(shape=(0,))
+    SupportSLOPE = np.empty(shape=(0,))
+
     PattLasso = np.empty(shape=(0,))
     MseLasso = np.empty(shape=(0,))
-    SupportSLOPE = np.empty(shape=(0,))
     SupportLasso = np.empty(shape=(0,))
+
+    Pattglasso = np.empty(shape=(0,))
+    Mseglasso = np.empty(shape=(0,))
+    Supportglasso = np.empty(shape=(0,))
 
     for i in range(len(x)):
         resultSLOPE = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n)
         resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * np.ones(len(b_0)), n=n)
+
         MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
         PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
-        SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
+        #SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
+
         MseLasso = np.append(MseLasso, resultLasso[0])
         PattLasso = np.append(PattLasso, resultLasso[1])
-        SupportLasso = np.append(SupportLasso, resultLasso[2])
+        #SupportLasso = np.append(SupportLasso, resultLasso[2])
+
+        if glasso == True:
+            if A is None:
+                A = AFLmon(len(b_0), b=0.1)
+            resultglasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, glasso=True,
+                                      A=x[i]*A)
+            Mseglasso= np.append(Mseglasso, resultglasso[0])
+            Pattglasso = np.append(Pattglasso, resultglasso[1])
+            Supportglasso = np.append(Supportglasso, resultglasso[2])
 
         resultOLS = 0.5*(MseSLOPE[0] + MseLasso[0])
+    if smooth == True:
+        # Spline interpolation for smoother curve
+        #x_smooth = np.concatenate((x, np.linspace(x.min(), x.max(), 10*(len(x)-1)+1)))
+        #x_smooth = np.sort(x_smooth)
+        x_smooth = np.linspace(x.min(), x.max(), 10 * (len(x) - 1) + 1)
 
+        spl1 = PchipInterpolator(x, MseSLOPE)  #
+        spl2 = PchipInterpolator(x, PattSLOPE)  #
+        spl3 = PchipInterpolator(x, MseLasso)  #
+        spl4 = PchipInterpolator(x, Mseglasso)
+        spl5 = PchipInterpolator(x, Pattglasso)
+
+        MseSLOPE = spl1(x_smooth)
+        PattSLOPE = spl2(x_smooth)
+        MseLasso = spl3(x_smooth)
+        Mseglasso = spl4(x_smooth)
+        Pattglasso = spl5(x_smooth)
+
+        x = x_smooth
+
+    # Plot the functions on the same graph
     plt.figure(figsize=(6, 6))
     plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
     plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
     plt.plot(x, PattSLOPE, label='pattern recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
+    if glasso == True:
+        plt.plot(x, Mseglasso, label='RMSE glasso', color='orange', lw=1.5, alpha=0.9)
+        plt.plot(x, Pattglasso, label='pattern recovery glasso', color='orange', linestyle='dashed', lw=1.5)
+
     #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
     #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
     #plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
 
-    plt.scatter(0, resultOLS, color='red', label='RMSE OLS')
+    plt.scatter(0, resultOLS, color='red', label='RMSE OLS') # Plot RMSE of OLS as a scatter point at 0
 
     # Increase the size of x-axis and y-axis tick labels
-    plt.xticks(fontsize=14)  # Change 12 to the desired font size for x-axis tick labels
-    plt.yticks(fontsize=14)  # Change 12 to the desired font size for y-axis tick labels
+    plt.xticks(fontsize=14)  # font size for x-axis tick labels
+    plt.yticks(fontsize=14)  # font size for y-axis tick labels
 
-    plt.xlabel(r'$\alpha$', fontsize=16) #penalty scaling
+    plt.xlabel(r'$\alpha$', fontsize=16)  # penalty scaling
     #plt.ylabel('Performance')
     #plt.title('Pattern Recovery and RMSE')
     caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
@@ -315,29 +363,35 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None):
 
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
-x = np.linspace(0, 4, 24)
+print(np.linspace(0, 3, 9)) #
+x = np.linspace(0, 3, 25) # 25 = (9-1)*3+1, linspace (n-1)*k + 1 refines linspace n
+print('x:', np.round(x,2))
+
 
 #plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 0.6]), x=x, n=500)
 #plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
 #plot_performance(b_0=np.array([1, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
-#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000)
-
-#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=2000, Cov=0.3**2*block_diag_matrix9)
+#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=200)
 
 
+plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
+                 C=block_diag_matrix9,
+                 lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+                 x=x,
+                 n=500,
+                 Cov=0.25**2*block_diag_matrix9,
+                 glasso=True,
+                 smooth=True)
 
 
+
+#phase transition in pattern recovery for SLOPE as correlation increases
 def plot_performance_tripple(b_0, C1, C2, C3, lambdas, x, n, Cov1=None, Cov2=None, Cov3=None):
     PattSLOPE1 = np.empty(shape=(0,))
     PattSLOPE2 = np.empty(shape=(0,))
     PattSLOPE3 = np.empty(shape=(0,))
-    MseSLOPE = np.empty(shape=(0,))
-    PattLasso = np.empty(shape=(0,))
-    MseLasso = np.empty(shape=(0,))
-    SupportSLOPE = np.empty(shape=(0,))
-    SupportLasso = np.empty(shape=(0,))
 
     for i in range(len(x)):
         resultSLOPE1 = patternMSE(b_0=b_0, C=C1, Cov=Cov1, lambdas=x[i] * lambdas, n=n)
@@ -356,11 +410,11 @@ def plot_performance_tripple(b_0, C1, C2, C3, lambdas, x, n, Cov1=None, Cov2=Non
     x_smooth = np.sort(x_smooth)
 
     spl1 = make_interp_spline(x, PattSLOPE1)
-    spl1 = PchipInterpolator(x,PattSLOPE1)#
+    spl1 = PchipInterpolator(x, PattSLOPE1)  #
     spl2 = make_interp_spline(x, PattSLOPE2)
-    spl2 = PchipInterpolator(x,PattSLOPE2)#
+    spl2 = PchipInterpolator(x, PattSLOPE2)  #
     spl3 = make_interp_spline(x, PattSLOPE3)
-    spl3 = PchipInterpolator(x,PattSLOPE3)#
+    spl3 = PchipInterpolator(x, PattSLOPE3)  #
 
     PattSLOPE1_smooth = spl1(x_smooth)
     PattSLOPE2_smooth = spl2(x_smooth)
@@ -407,22 +461,22 @@ C2 = np.array([[1, alpha2], [alpha2, 1]])
 C3 = np.array([[1, alpha3], [alpha3, 1]])
 sigma=0.2
 x = np.linspace(0, 2, 11) #31 point between 0 and 10 was default
-print(x)
+#print('x:', x)
 # Custom points to be added
 custom_points = np.array([(x[0]+x[1])/2, (x[1]+x[2])/2, (x[2]+x[3])/2])
 # Concatenate the custom points with the linspace array
 x_with_custom_points = np.concatenate((x, custom_points))
 # Sort the array for better visualization (optional)
 x = np.sort(x_with_custom_points)
-print(x)
+#print('x:', x)
 #x = np.linspace(0, 10, 31)
 custom_points = np.array([0, 0.05, 0.18, 0.5, 1.2, 2])
 
 custom_smooth = np.concatenate((custom_points, np.array([0.1, 0.14, 0.8])))
 custom_smooth = np.sort(custom_smooth)
-print('concatenated', custom_smooth)
+#print('concatenated', custom_smooth)
 
-plot_performance_tripple(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x = custom_points, n=100, Cov1=sigma ** 2 * C1, Cov2=sigma ** 2 * C2, Cov3=sigma ** 2 * C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
+#plot_performance_tripple(b_0=np.array([1, 0]), C1=C1, C2=C2, C3=C3, lambdas=np.array([3, 2]), x = custom_points, n=100, Cov1=sigma ** 2 * C1, Cov2=sigma ** 2 * C2, Cov3=sigma ** 2 * C3) #, Cov1=sigma**2*C1, Cov2=sigma**2*C2, Cov3=sigma**2*C3)
 
 '''
 test_mean = 0

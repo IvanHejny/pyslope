@@ -63,12 +63,33 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
 
     return x
 
+# penalty matrices in generalized lasso
+def AFL(p, a=1): #Fused Lasso + Lasso, tuned by a. For a=0, Lasso.
+    A = np.zeros((2 * p - 1, p))
+    for i in range(p - 1):
+        A[i][i] = 1
+        A[i][i + 1] = -1  # clustering penalty
+    for i in range(p - 1, 2 * p - 1):
+        A[i][i - (p - 1)] = a  # sparsity penalty
+    normalization = np.sum(A)
+    return p*(1/normalization)*A
+
+def AFLmon(p, b=0.1): # Fused Lasso + Monotone Lasso penalty
+    A = np.zeros((2 * p - 1, p))
+    for i in range(p - 1):
+        A[i][i] = 1
+        A[i][i + 1] = -1  # clustering penalty
+    for i in range(p - 1, 2 * p - 1):
+        A[i][i - (p - 1)] = 1+b*(i-(p-1)+1)  # monotone sparsity penalty
+        normalization = np.sum(A)
+    return p*(1/normalization)*A
+#print('AFLmon:\n', AFLmon(7, 0.1))
 
 
 
 
 #print('A:\n', A)
-#'''
+'''
 p=9
 A = np.zeros((p-1, p))
 for i in range(p - 1):
@@ -98,7 +119,7 @@ for i in range(p-1, 2*p -1):
 #print('AFL\n:', AFLsmall)
 
 
-#'''
+'''
 
 
 
