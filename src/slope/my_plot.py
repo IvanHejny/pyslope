@@ -331,12 +331,12 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, glasso=False, A = None, sm
 
     # Plot the functions on the same graph
     plt.figure(figsize=(6, 6))
-    plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
     plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
+    plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
     plt.plot(x, PattSLOPE, label='pattern recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
     if glasso == True:
-        plt.plot(x, Mseglasso, label='RMSE glasso', color='orange', lw=1.5, alpha=0.9)
-        plt.plot(x, Pattglasso, label='pattern recovery glasso', color='orange', linestyle='dashed', lw=1.5)
+        plt.plot(x, Mseglasso, label='RMSE Glasso', color='orange', lw=1.5, alpha=0.9)
+        plt.plot(x, Pattglasso, label='pattern recovery Glasso', color='orange', linestyle='dashed', lw=1.5)
 
     #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
     #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
@@ -364,8 +364,8 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, glasso=False, A = None, sm
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
 print(np.linspace(0, 3, 9)) #
-x = np.linspace(0, 3, 25) # 25 = (9-1)*3+1, linspace (n-1)*k + 1 refines linspace n
-print('x:', np.round(x,2))
+x = np.linspace(0, 2, 25) # 25 = (9-1)*3+1, linspace (n-1)*k + 1 refines linspace n
+#print('x:', np.round(x,2))
 
 
 #plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 0.6]), x=x, n=500)
@@ -380,8 +380,8 @@ plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
                  C=block_diag_matrix9,
                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
                  x=x,
-                 n=500,
-                 Cov=0.25**2*block_diag_matrix9,
+                 n=3000,
+                 Cov=0.2**2*block_diag_matrix9,
                  glasso=True,
                  smooth=True)
 
