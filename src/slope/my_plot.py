@@ -219,8 +219,17 @@ print('small_step', pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1
 # print(patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = np.array([1, 1, 1, 1 ]), n = 100))
 # print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = 15*np.array([1.6, 1.2, 0.8, 0.6]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 step SLOPE, perfect pattern recovery
 # print(patternMSE(b_0 = np.array([0, 0, 1, 1]), C = np.identity(4), lambdas = np.array([1, 1, 1, 1]), n = 500, Cov = np.linalg.inv(C_compound))) # 2 STEP Lasso, perfect support recovery
-print('SLOPE_patMSE:', patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = 10*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
-print('glasso_patMSE:', patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = 0*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100, glasso = True, A = 10* AFLmon(9, 0.1)))
+# print('SLOPE_patMSE:', patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = 10*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
+
+
+print('glasso_patMSE:', patternMSE(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
+                                   C=block_diag_matrix9,
+                                   lambdas=0*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+                                   Cov=0.2**2*block_diag_matrix9,
+                                   n=100,
+                                   glasso=True,
+                                   A=40*AFLmon(9, 0.1)))
+
 
 
 
@@ -313,7 +322,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, glasso=False, A = None, sm
         # Spline interpolation for smoother curve
         #x_smooth = np.concatenate((x, np.linspace(x.min(), x.max(), 10*(len(x)-1)+1)))
         #x_smooth = np.sort(x_smooth)
-        x_smooth = np.linspace(x.min(), x.max(), 10 * (len(x) - 1) + 1)
+        x_smooth = np.linspace(x.min(), x.max(), 4 * (len(x) - 1) + 1)
 
         spl1 = PchipInterpolator(x, MseSLOPE)  #
         spl2 = PchipInterpolator(x, PattSLOPE)  #
@@ -364,9 +373,15 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, glasso=False, A = None, sm
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
 print(np.linspace(0, 3, 9)) #
-x = np.linspace(0, 2, 25) # 25 = (9-1)*3+1, linspace (n-1)*k + 1 refines linspace n
+x = np.linspace(0, 2, 20) # 25 = (9-1)*3+1, linspace (n-1)*k + 1 refines linspace n
 #print('x:', np.round(x,2))
-
+x1 = np.linspace(0,1,10)
+#print('x1:', x1)
+x2 = np.delete(np.linspace(1,2, 5),0)
+#print('x2:', x2)
+#print('deltest:', np.delete(np.array([1,2,3,]), 2))
+xconcat = np.concatenate((x1, x2))
+#print('xconcat:', xconcat)
 
 #plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 0.6]), x=x, n=500)
 #plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
@@ -379,12 +394,22 @@ x = np.linspace(0, 2, 25) # 25 = (9-1)*3+1, linspace (n-1)*k + 1 refines linspac
 plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
                  C=block_diag_matrix9,
                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-                 x=x,
-                 n=3000,
+                 x=x, #np.linspace(0.48, 0.55, 10)
+                 n=1000,
                  Cov=0.2**2*block_diag_matrix9,
                  glasso=True,
                  smooth=True)
 
+
+
+# plot_performance(b_0=np.array([0, 1]),
+#                  C=np.array([[1,0.8],[0.8,1]]),
+#                  lambdas=np.array([1.2, 0.8]),
+#                  x=x, #np.linspace(0.48, 0.55, 10)
+#                  n=200,
+#                  Cov=0.2**2*np.array([[1,0.8],[0.8,1]]),
+#                  glasso=True,
+#                  smooth=True)
 
 
 #phase transition in pattern recovery for SLOPE as correlation increases

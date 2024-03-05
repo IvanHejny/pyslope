@@ -48,12 +48,12 @@ beta09 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])  # recovery seemingly impossible 
 beta03 = np.array([0,1,1])  # recovery for tuned AFL a>>1
 beta030 = np.array([0, 0, 1])  # recovery for tuned AFL a>>1
 beta04 = np.array([0, 0, 1, 1])  # recovery for tuned AFL a>>1
-beta043 = np.array([0, 1, 1, 2])  # fails to recover the middle cluster
-beta07 = np.array([0, 1, 1, 2, 2, 3, 3])  # fails to recover the two middle clusters, but recovers the 0 and the last
+beta043 = np.array([ 0, 1, 1, 2])  # fails to recover the middle cluster
+beta07 = np.array([ 2, 2, 0, -3, -3, 1, 1])  # fails to recover the two middle clusters, but recovers the 0 and the last
 
 # printing different quantities appearing in the ADMM algorithm
-my_beta0 = beta09
-my_A = AFLmon(9, 0.1) # AFL(4,1.3) # AFL(7,1)
+my_beta0 = beta07
+my_A = AFLmon(7,0.1) #AFLmon(4, 0.1) # AFL(4,1.3) # AFL(7,1)
 
 #my_beta0 = beta0
 #my_A = AFL
@@ -85,16 +85,19 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic e
         W = np.random.multivariate_normal(np.zeros(p), C)
         glasso_sample = admm_glasso(C, A, W, beta0, lambdas, iter)
         #print('glasso_sol:', np.round(glasso_sample, 3))
-        print('glasso_sol:', pattern(np.round(glasso_sample, 3)))
+        #print('glasso_sol:', pattern(np.round(glasso_sample, 3)))
+        print('glasso_sol:', np.round(glasso_sample, 3))
 
 # print(glasso_sampler(C2, AFL(2, a=1.5), beta02, 40))
 # print(glasso_sampler(np.identity(3), AFL(3, a=1.5), beta030, 40))
 # print(glasso_sampler(C9_comp, AFL(9), beta09, 40))
-# print(glasso_sampler(np.identity(4), AFL(4, a=1.2), beta043, 40))
 # print(glasso_sampler(np.identity(7), AFL(7, a=1.2), beta07, 40))
+#print(glasso_sampler(np.identity(4), AFLmon(4, b=0.1), beta043, 40))
+#print(glasso_sampler(np.identity(4), AFL(4, 1.1), beta043, 40))
 
-#print(glasso_sampler(np.identity(7), AFLmon(7,0.1), beta07, 40))
-print(glasso_sampler(C9_block, AFLmon(9, 0.1), beta09, 40)) # perfect pattern recovery by AFLmon
+
+print(glasso_sampler(np.identity(7), AFLmon(7,0.1), beta07, 40))
+#print(glasso_sampler(C9_block, AFLmon(9, 0.1), beta09, 40)) # perfect pattern recovery by AFLmon
 #print(glasso_sampler(C9_block, AFLmon(9, 0.1), np.array([1,1,1,0,0,0,2,2,2]), 40)) #reshuffled beta0, no issue
 
 
