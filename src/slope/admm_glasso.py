@@ -72,7 +72,7 @@ def AFL(p, a=1): #Fused Lasso + Lasso, tuned by a. For a=0, Lasso.
     for i in range(p - 1, 2 * p - 1):
         A[i][i - (p - 1)] = a  # sparsity penalty
     normalization = np.sum(A)
-    return p*(1/normalization)*A #A
+    return A#p*(1/normalization)*A #A
 
 def AFLmon(p, b=0.1): # Fused Lasso + Monotone Lasso penalty
     A = np.zeros((2 * p - 1, p))
@@ -82,7 +82,7 @@ def AFLmon(p, b=0.1): # Fused Lasso + Monotone Lasso penalty
     for i in range(p - 1, 2 * p - 1):
         A[i][i - (p - 1)] = 1+b*(i-(p-1)+1)  # monotone sparsity penalty
         normalization = np.sum(A)
-    return p*(1/normalization)*A #A
+    return A#p*(1/normalization)*A #A
 #print('AFLmon:\n', AFLmon(7, 0.1))
 
 
@@ -91,12 +91,13 @@ for i in range(13):
     for i in range(6):
         Acustom[i][i] = 1
         Acustom[i][i + 1] = -1  # clustering penalty
-    for i in range(6, 13):
-        Acustom[i][i - (7 - 1)] = 1+0.1*(i-(7-1)+1)  # monotone sparsity penalty
-#Acustom[8][10-8]=1.05
-Acustom[6][6-6]=1.2
-Acustom[7][7-6]=1.3
-Acustom[8][8-6]=1.1
+Acustom[6][6-6] = 1.1  # a1
+Acustom[7][7-6] = 1.2  # a2
+Acustom[8][8-6] = 1.3  # a3
+Acustom[9][9-6] = 1.4  # a4
+Acustom[10][10-6] = 1.5  # a5
+Acustom[11][11-6] = 1.6  # a6
+Acustom[12][12-6] = 1.7  # a7
 print('Acustom:\n', Acustom)
 
 

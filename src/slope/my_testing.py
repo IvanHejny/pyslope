@@ -45,28 +45,24 @@ print('Amon:\n', Amon)
 beta02 = np.array([0, 1])  # recovery for tuned AFL a>>1
 beta09 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])  # recovery seemingly impossible irrespective of tuning AFL
 # the error in pattern always occurs in the middle cluster next to zero cluster, never in the last cluster
-beta03 = np.array([0,1,1])  # recovery for tuned AFL a>>1
+beta03 = np.array([1,1,0])  #
 beta030 = np.array([0, 0, 1])  # recovery for tuned AFL a>>1
 beta04 = np.array([0, 0, 1, 1])  # recovery for tuned AFL a>>1
 beta043 = np.array([ 0, 1, 1, 2])  # fails to recover the middle cluster
-beta07 = np.array([ 2, 2, 0, -3, -3, 1, 1])  # fails to recover the two middle clusters, but recovers the 0 and the last
+beta07 = np.array([ 2, 2, -3, -3, 1, 1, 1])  # fails to recover the two middle clusters, but recovers the 0 and the last
 
 # printing different quantities appearing in the ADMM algorithm
-my_beta0 = beta07
-my_A = AFLmon(7,0.1) #AFLmon(4, 0.1) # AFL(4,1.3) # AFL(7,1)
+my_beta0 = beta03
+my_A = AFLmon(3,0.1) #AFLmon(4, 0.1) # AFL(4,1.3) # AFL(7,1)
 
-#my_beta0 = beta0
-#my_A = AFL
-#my_A = np.identity(9) #Lasso penalty
-#my_A = A #Fused Lasso penalty
 print('my_beta0:', my_beta0)
 print('my_A:\n', my_A)
 E_1 = np.diag(np.sign(my_A @ my_beta0))  # sgn(A*beta0) mxm matrix
-print('E_1:\n', E_1)
+#print('E_1:\n', E_1)
 ind = np.where(np.diag(E_1) == 0)[0]
-print('ind:', ind)
+#print('ind:', ind)
 F_0 = my_A[ind, :]
-print('F_0:\n', F_0)
+#print('F_0:\n', F_0)
 print('colsum:\n', E_1 @ my_A, np.ones(my_A.shape[0]).T @ E_1 @ my_A)
 
 # covariance matrix
@@ -96,12 +92,43 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic e
 #print(glasso_sampler(np.identity(4), AFL(4, 1.1), beta043, 40))
 
 
-print(glasso_sampler(np.identity(7), AFLmon(7,0.1), beta07, 40))
+#print(glasso_sampler(np.identity(7), AFLmon(7,0.1), beta07, 40))
 #print(glasso_sampler(C9_block, AFLmon(9, 0.1), beta09, 40)) # perfect pattern recovery by AFLmon
 #print(glasso_sampler(C9_block, AFLmon(9, 0.1), np.array([1,1,1,0,0,0,2,2,2]), 40)) #reshuffled beta0, no issue
 
+beta4 = np.array([2, 1, 1, 0])  # not recovered by a= (2, 2.1, 2.2, 1.1), rec iff a4>1, a2>a3, |a3-a2|<4
+beta4m = np.array([1, 1, 0, 2])  # recovered by a= (2, 2.1, 2.2, a4), rec iff a1>1,a1<a2, |a2-a1|<1, a3>2
+beta4m2 = np.array([2, 0, 1, 1])  #
+beta3 = np.array([0, 1, 0]) # for p=3, all patterns are recovered by AFLmon(3, a=1.1)
+beta2 = np.array([1, 0])
+beta4no0 =np.array([2, 2, 1, 1])
+a1 = 2.9
+a2 = 2.8
+a3 = 2.7
+a4 = 2.6
 
+A2custom = np.array([[1, -1], [a1, 0], [0, a2]])
+#print(glasso_sampler(np.identity(2), A2custom, beta2, 40))
 
+A3custom = np.array([[1, -1, 0], [0, 1, -1], [a1, 0, 0], [0, a2, 0], [0, 0, a3]])
+#print(glasso_sampler(np.identity(3), A3custom, beta3, 40))
+
+A4custom = np.array([[1, -1, 0, 0], [0, 1, -1, 0], [0, 0, 1, -1], [a1, 0, 0, 0], [0, a2, 0, 0], [0, 0, a3, 0], [0, 0, 0, a4]])
+#print(glasso_sampler(np.identity(4), A4custom, beta4, 40))
+
+a5 = 2.5
+a6 = 2.4
+a7 = 2.3
+a8 = 2.2
+a9 = 2.1
+
+beta7 = np.array([0, 3, 2, 2, 1, 1, 0])
+A7custom = np.array([[1, -1, 0, 0, 0, 0, 0], [0, 1, -1, 0, 0, 0, 0], [0, 0, 1, -1, 0, 0, 0], [0, 0, 0, 1, -1, 0, 0], [0, 0, 0, 0, 1, -1, 0], [0, 0, 0, 0, 0, 1, -1], [a1, 0, 0, 0, 0, 0, 0], [0, a2, 0, 0, 0, 0, 0], [0, 0, a3, 0, 0, 0, 0], [0, 0, 0, a4, 0, 0, 0], [0, 0, 0, 0, a5, 0, 0], [0, 0, 0, 0, 0, a6, 0], [0, 0, 0, 0, 0, 0, a7]])
+#print(glasso_sampler(np.identity(7), A7custom, beta7, 40))
+
+beta9 = np.array([-1, -3, -4, -4, 5, 5, 6, 6, 1])
+A9custom = np.array([[1, -1, 0, 0, 0, 0, 0, 0, 0], [0, 1, -1, 0, 0, 0, 0, 0, 0], [0, 0, 1, -1, 0, 0, 0, 0, 0], [0, 0, 0, 1, -1, 0, 0, 0, 0], [0, 0, 0, 0, 1, -1, 0, 0, 0], [0, 0, 0, 0, 0, 1, -1, 0, 0], [0, 0, 0, 0, 0, 0, 1, -1, 0], [0, 0, 0, 0, 0, 0, 0, 1, -1], [a1, 0, 0, 0, 0, 0, 0, 0, 0], [0, a2, 0, 0, 0, 0, 0, 0, 0], [0, 0, a3, 0, 0, 0, 0, 0, 0], [0, 0, 0, a4, 0, 0, 0, 0, 0], [0, 0, 0, 0, a5, 0, 0, 0, 0], [0, 0, 0, 0, 0, a6, 0, 0, 0], [0, 0, 0, 0, 0, 0, a7, 0, 0], [0, 0, 0, 0, 0, 0, 0, a8, 0], [0, 0, 0, 0, 0, 0, 0, 0, a9]])
+print(glasso_sampler(np.identity(9), A9custom, beta9, 40))
 
 
 #testing if admm lasso = pgd lasso, sanity check! Works fine
