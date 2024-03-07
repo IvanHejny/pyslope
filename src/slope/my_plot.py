@@ -390,14 +390,17 @@ xconcat = np.concatenate((x1, x2))
 #plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
 #plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=200)
 
+b = np.array([1, 1.15, 1.25, 1.3, 1.3, 1.25, 1.15, 1])
+A9Bcustom = Acustom(a=1.4*np.ones(9), b=b[:8])
 
 plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
                  C=block_diag_matrix9,
                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
                  x=x, #np.linspace(0.48, 0.55, 10)
-                 n=1000,
+                 n=100,
                  Cov=0.2**2*block_diag_matrix9,
                  glasso=True,
+                 A=(1/np.sum(A9Bcustom))*9*A9Bcustom,
                  smooth=True)
 
 

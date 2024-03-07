@@ -85,20 +85,18 @@ def AFLmon(p, b=0.1): # Fused Lasso + Monotone Lasso penalty
     return A#p*(1/normalization)*A #A
 #print('AFLmon:\n', AFLmon(7, 0.1))
 
+def Acustom(a , b): # a: sparsity penalty, b: clustering penalty
+    p = len(a)
+    A = np.zeros((2 * p - 1, p))
+    for i in range(p - 1):
+        A[i][i] = b[i]
+        A[i][i + 1] = -b[i]  # clustering penalty
+    for i in range(p):
+        A[p-1+i][i - p] = a[i]  # sparsity penalty
+        normalization = np.sum(A)
+    return A
 
-Acustom = np.zeros((13, 7))
-for i in range(13):
-    for i in range(6):
-        Acustom[i][i] = 1
-        Acustom[i][i + 1] = -1  # clustering penalty
-Acustom[6][6-6] = 1.1  # a1
-Acustom[7][7-6] = 1.2  # a2
-Acustom[8][8-6] = 1.3  # a3
-Acustom[9][9-6] = 1.4  # a4
-Acustom[10][10-6] = 1.5  # a5
-Acustom[11][11-6] = 1.6  # a6
-Acustom[12][12-6] = 1.7  # a7
-print('Acustom:\n', Acustom)
+print('Acustom:\n', Acustom(a= [1,2,3], b= [5,1]))
 
 
 
