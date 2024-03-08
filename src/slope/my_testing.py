@@ -114,6 +114,7 @@ beta7s = np.array([5, 1, 2, 2, 3, 3, 4])
 beta7t = np.array([1, 2, 2, 2, 4, 4, 5])
 beta9 = np.array([-4, -3, -2, -2, 1, 1, 3, 3, 5])
 beta9pos = np.array([1, 1, 2, 2, 3, 3, 4, 4, 5])
+beta9pos2 = np.array([5, 4, 4, 3, 0, 2, 2, 4, 6]) #  the zero is not recovered with AB9custom with a =1.4. Need a > 2.6 (sum of the neighboring cluster penalties)
 beta9t = np.array([4, -2, -2, 1, 1, 1, 0, 0, 1])
 '''
 a1 = 2.9
@@ -128,8 +129,8 @@ b4 = 1
 '''
 a = np.array([2.9, 2.8, 1.2, 0.9, 0.8, 0.1, 2.5, 0, 0])
 b = np.array([1, 1.15, 1.25, 1.3, 1.3, 1.25, 1.15, 1])  # np.array([1, 1, 1.2, 1, 1.2, 1, 1.2, 1]) recove
-#blog = np.array([np.log(2), np.log(3), np.log(4), np.log(5), np.log(6), np.log(7), np.log(8)])
-
+blog = np.array([np.log(2), np.log(3), np.log(4), np.log(5), np.log(6), np.log(7), np.log(8), np.log(9), np.log(10)])
+print('blog:', blog)
 A3Bcustom = Acustom(a=np.zeros(3), b=b[:2])
 #print(glasso_sampler(np.identity(3), A3Bcustom, beta3, 40))
 #print(glasso_sampler(np.identity(3), A3Bcustom, beta3r, 40))
@@ -140,9 +141,11 @@ A5Bcustom = Acustom(a=np.zeros(5), b=b[:4])
 #print('A5Bcustom:\n', A5Bcustom)
 A7Bcustom = Acustom(a=np.zeros(7), b=b[:6])
 #print(glasso_sampler(np.identity(7), A7Bcustom, beta7, 40))
-A9Bcustom = Acustom(a=1.4*np.ones(9), b=b[:8])
+A9Bcustom = Acustom(a=2*np.ones(9), b=blog[:8])
+A9Blog = Acustom(a=np.log(10)*np.ones(9), b=blog[:8])
+print('A9Blog:\n', np.round(A9Blog,2))
 #('A7Bcustom:\n', A9Bcustom)
-print(glasso_sampler(np.identity(9), A9Bcustom, beta9t, 80))
+print(glasso_sampler(np.identity(9), A9Bcustom, beta9, 800))
 
 #A2custom = Acustom(a=a[:2], b=np.ones(1))
 #print(glasso_sampler(np.identity(2), A2custom, beta2, 40))
