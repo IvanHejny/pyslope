@@ -31,7 +31,7 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
     minimizes: u^TCu -u^T w + f_A'(b;u), where f_A(b)=lam*||Ab||_1 is the generalized Lasso penalty.
     """
     p = len(beta0)
-    E_1 = np.diag(np.sign(A @ beta0))  # sgn(A beta0): k x k diagonal sign matrix
+    E_1 = np.diag(np.sign(np.round(A @ beta0, 10)))  # sgn(A beta0): k x k diagonal sign matrix, rounding to prevent numerical errors like np.sign(4.4408921e-16)=1.
     ind = np.where(np.diag(E_1) == 0)[0]
     F_0 = A[ind, :]  # F_0*x = (I-|sgn(A*beta0)|)A*x
 
@@ -63,6 +63,18 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
 
     return x
 
+
+'''
+#print(admm_glasso(C=np.identity(3), A=np.array([[1, -1, 0], [0, 1.15, -1.15]]), w=np.array([1, 1, 1]), beta0=np.array([1, 4, 4]), lambdas=400, iter=100))
+#print(admm_glasso(C=np.identity(3), A=np.array([[1, -1, 0], [0, 1.15, -1.15]]), w=np.array([1, 1, 1]), beta0=np.array([1, 5, 5]), lambdas=400, iter=100))
+#np.diag(np.sign(A @ beta0))
+#print('A@b0:\n', np.array([[1, -1, 0], [0, 1.15, -1.15]]) @ np.array([1, 5, 5]))
+#print('sign(A@b0):\n', np.sign(np.array([[1, -1, 0], [0, 1.15, -1.15]]) @ np.array([1, 5, 5])))
+#print('sign(A@b0):\n', np.sign(np.round(np.array([[1, -1, 0], [0, 1.15, -1.15]]) @ np.array([1, 5, 5]),10)))
+#print('[1,4,4]:\n', np.diag(np.sign(np.array([[1, -1, 0], [0, 1.15, -1.15]]) @ np.array([1, 4, 4]))))
+#print('[1,5,5]:\n', np.diag(np.sign(np.array([[1, -1, 0], [0, 1.15, -1.15]]) @ np.array([1, 5, 5]))))
+#print(np.sign(5*1.15-5*1.15))
+'''
 # penalty matrices in generalized lasso
 def AFL(p, a=1): #Fused Lasso + Lasso, tuned by a. For a=0, Lasso.
     A = np.zeros((2 * p - 1, p))

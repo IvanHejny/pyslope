@@ -97,24 +97,29 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic e
 #print(glasso_sampler(C9_block, AFLmon(9, 0.1), np.array([1,1,1,0,0,0,2,2,2]), 40)) #reshuffled beta0, no issue
 
 beta2 = np.array([1, 0])
-beta3 = np.array([1, 1, 2])  # for p=3, all patterns are recovered by AFLmon(3, a=1.1)
-beta3r = np.array([1, 2, 2])
+beta3 = np.array([1, 2, 2])  # for p=3, all patterns are recovered by AFLmon(3, a=1.1)
+beta3bug = np.array([1, 20, 20])
 beta4 = np.array([2, 1, 1, 0])  # not recovered by a= (2, 2.1, 2.2, 1.1), rec iff a4>1, a2>a3, |a3-a2|<4
 beta4m = np.array([1, 1, 0, 2])  # recovered by a= (2, 2.1, 2.2, a4), rec iff a1>1,a1<a2, |a2-a1|<1, a3>2
 beta4m2 = np.array([2, 0, 1, 1])  #
 beta4no0 = np.array([1, 2, 2, 3])
 beta4no0rev = np.array([3, 2, 2, 1])
 beta4no0r = np.array([1, 1, 2, 2])
+beta4test = np.array([1, 2, 3, 3])
 
-beta5 = np.array([1, 2, 2, 3, 4])
+beta5 = np.array([1, 1, 3, 4, 4])
 beta5r = np.array([3, 2, 1, 1, 0])
-beta7 = np.array([1, 2, 2, 3, 3, 4, 5])
+beta7 = np.array([1, 1, 2, 2, 3, 4, 4])
+beta7bug = np.array([1, 1, 2, 2, 3, 5, 5])  # exactly the same as beta7
 beta7r = np.array([5, 4, 3, 3, 2, 2, 1])
 beta7s = np.array([5, 1, 2, 2, 3, 3, 4])
 beta7t = np.array([1, 2, 2, 2, 4, 4, 5])
+
+beta8 = np.array([1, 2, 2, 2, 2, 3, 3, 3])
+
 beta9 = np.array([-4, -3, -2, -2, 1, 1, 3, 3, 5])
-beta9pos = np.array([1, 1, 2, 2, 3, 3, 4, 4, 5])
-beta9pos2 = np.array([5, 4, 4, 3, 0, 2, 2, 4, 6]) #  the zero is not recovered with AB9custom with a =1.4. Need a > 2.6 (sum of the neighboring cluster penalties)
+beta9pos = np.array([1, 1, 2, 2, 3, 3, 4, 5, 5])  # not recovered by concavification, last cluster breaks
+beta9pos2 = np.array([5, 4, 4, 3, 0, 2, 2, 4, 6])  # the zero is not recovered with AB9custom with a =1.4. Need a > 2.6 (sum of the neighboring cluster penalties)
 beta9t = np.array([4, -2, -2, 1, 1, 1, 0, 0, 1])
 '''
 a1 = 2.9
@@ -129,23 +134,31 @@ b4 = 1
 '''
 a = np.array([2.9, 2.8, 1.2, 0.9, 0.8, 0.1, 2.5, 0, 0])
 b = np.array([1, 1.15, 1.25, 1.3, 1.3, 1.25, 1.15, 1])  # np.array([1, 1, 1.2, 1, 1.2, 1, 1.2, 1]) recove
-blog = np.array([np.log(2), np.log(3), np.log(4), np.log(5), np.log(6), np.log(7), np.log(8), np.log(9), np.log(10)])
+blog = np.array([np.log(2), np.log(3), np.log(4), np.log(5), np.log(6), np.log(7), 0.1*np.log(8), np.log(9)])
+#  for beta8 illustrative penalty np.array([np.log(2), np.log(3), 0.1*np.log(4), np.log(5), np.log(6), 2/3*np.log(6), 1/3*np.log(6), np.log(9)])
 print('blog:', blog)
+#log_vector = lambda p: np.array([np.log(i) for i in range(2, p+1)])
+print('log_vector:', np.log(np.arange(2, 10)))  #
 A3Bcustom = Acustom(a=np.zeros(3), b=b[:2])
+print('A3Bcustom:\n', A3Bcustom)
 #print(glasso_sampler(np.identity(3), A3Bcustom, beta3, 40))
-#print(glasso_sampler(np.identity(3), A3Bcustom, beta3r, 40))
-A4Bcustom = Acustom(a=np.zeros(4), b=b[:3])
-#print(glasso_sampler(np.identity(4), A4Bcustom, beta4no0r, 40))
-A5Bcustom = Acustom(a=np.zeros(5), b=b[:4])
-#print(glasso_sampler(np.identity(5), A5Bcustom, beta5r, 40))
+#print(glasso_sampler(np.identity(3), A3Bcustom, beta3bug, 40))
+A4Bcustom = Acustom(a=np.zeros(4), b=np.log(np.arange(2, 5)))
+#print(glasso_sampler(np.identity(4), A4Bcustom, beta4test, 400))
+
+A5Bcustom = Acustom(a=np.zeros(5), b=np.log(np.arange(2, 6)))
+#print(glasso_sampler(np.identity(5), A5Bcustom, beta5, 400))
 #print('A5Bcustom:\n', A5Bcustom)
-A7Bcustom = Acustom(a=np.zeros(7), b=b[:6])
-#print(glasso_sampler(np.identity(7), A7Bcustom, beta7, 40))
-A9Bcustom = Acustom(a=2*np.ones(9), b=blog[:8])
-A9Blog = Acustom(a=np.log(10)*np.ones(9), b=blog[:8])
-print('A9Blog:\n', np.round(A9Blog,2))
-#('A7Bcustom:\n', A9Bcustom)
-print(glasso_sampler(np.identity(9), A9Bcustom, beta9, 800))
+A7Bcustom = Acustom(a=np.zeros(7), b=np.log(np.arange(2, 8)))
+#print(glasso_sampler(np.identity(7), A7Bcustom, beta7, 400))
+A8Blog = Acustom(a=0*2*np.log(10)*np.ones(8), b=blog[:7])
+print('A8Blog:\n', np.round(A8Blog,2))
+print(glasso_sampler(np.identity(8), A8Blog, beta8, 800))
+
+A9Bcustom = Acustom(a=5*np.ones(9), b=blog[:8])
+A9Blog = Acustom(a=0*2*np.log(10)*np.ones(9), b=blog[:8])
+#print('A9Blog:\n', np.round(A9Blog,2))
+#print(glasso_sampler(np.identity(9), A9Blog, beta9pos, 800))
 
 #A2custom = Acustom(a=a[:2], b=np.ones(1))
 #print(glasso_sampler(np.identity(2), A2custom, beta2, 40))
