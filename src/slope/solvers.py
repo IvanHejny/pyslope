@@ -320,7 +320,7 @@ def prox_slope_b_0(b_0, y, lambdas):
     solution = u_reconstruction(b_0, prox_k_clusters) # [2.5, 1.5, 2.5, 1.5, 32.5, 32.5, -3.0, -1.0]
     return solution
 
-
+#print(prox_slope_b_0([0, 2, 0, 2, -2, -2, 1, 1], [5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0], [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]))
 
 def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
     """Compute the solution to minimize: 1/2 u^T*C*u-u^T*W+J_{b^0,lambda}(u),
