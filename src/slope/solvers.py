@@ -282,7 +282,7 @@ def prox_slope_new(y, lambdas):
     return y
 
 def prox_slope_b_0(b_0, y, lambdas):
-    """Compute the prox operator for the generalized slope norm J_{b^0,lambda}, i.e; prox_{J_{b^0,lambda}}(y) = argmin_u (1/2)||u-y||^2+J_{b^0,lambda}(u)
+    """Compute the prox operator for the SLOPE directional derivative J'_{lambda}, i.e; prox_{J_{b^0,lambda}}(y) = argmin_u (1/2)||u-y||^2+J'_{lambda}(u)
 
        Parameters
        ----------
@@ -303,12 +303,12 @@ def prox_slope_b_0(b_0, y, lambdas):
     # b_0 = [0, 2, 0, 2, -2, -2, 1, 1]
     # y = [5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0]
     # lambdas = [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]
-    nr_clusters = max(np.abs(b_0)) # 2
+    nr_clusters = max(np.abs(b_0))  # 2
     y_partition = y_partition_by_b_0(b_0, y)  # [[5.0, 4.0], [12.0, 17.0], [60.0, 50.0, 10.0, -5.0]]
     lambda_partition = lambda_partition_by_b_0(b_0, lambdas)  # [[1.0, 3.0], [15.0, 17.0], [20.0, 40.0, 42.0, 65.0]]
     b_0_partition = y_partition_by_b_0(b_0, b_0) #[[0,0],[1,1],[2,2,-2,-2]]
     prox_0_cluster = prox_slope_new(y=y_partition[0], lambdas=lambda_partition[0])
-    prox_k_clusters = [prox_0_cluster] #[[2.5,2.5]] then [[2.5, 2.5], [-3.0, -1.]] then [[2.5, 2.5], [-3.0, -1.], [1.5, 1.5, 32.5, 32.5]]
+    prox_k_clusters = [prox_0_cluster]  # [[2.5,2.5]] then [[2.5, 2.5], [-3.0, -1.]] then [[2.5, 2.5], [-3.0, -1.], [1.5, 1.5, 32.5, 32.5]]
 
     for k in range(nr_clusters):
         b_0_kth = np.array(b_0_partition[k + 1])
@@ -317,7 +317,7 @@ def prox_slope_b_0(b_0, y, lambdas):
         prox_kth_cluster = prox_slope_on_b_0_single_cluster(b_0=b_0_kth, y=y_kth, lambdas=lambda_kth)
         prox_k_clusters.append(prox_kth_cluster)
 
-    solution = u_reconstruction(b_0, prox_k_clusters) # [2.5, 1.5, 2.5, 1.5, 32.5, 32.5, -3.0, -1.0]
+    solution = u_reconstruction(b_0, prox_k_clusters)  # [2.5, 1.5, 2.5, 1.5, 32.5, 32.5, -3.0, -1.0]
     return solution
 
 #print(prox_slope_b_0([0, 2, 0, 2, -2, -2, 1, 1], [5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0], [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]))
