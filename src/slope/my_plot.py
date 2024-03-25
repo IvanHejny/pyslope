@@ -397,7 +397,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
 
 # Example usage:
 # Define b_0, C, lambdas, and x before calling the function
-print(np.linspace(0, 3, 9)) #
+# print(np.linspace(0, 3, 9)) #
 x = np.linspace(0, 2, 20) # 25 = (9-1)*3+1, linspace (n-1)*k + 1 refines linspace n
 #print('x:', np.round(x,2))
 x1 = np.linspace(0,1,10)
@@ -418,15 +418,17 @@ xconcat = np.concatenate((x1, x2))
 b = np.array([1, 1.15, 1.25, 1.3, 1.3, 1.25, 1.15, 1])
 A9Bcustom = Acustom(a=1.4*np.ones(9), b=b[:8])
 #A9Bcustom = Acustom(a=np.ones(9), b=np.ones(8))
+
 bump_quadratic = lambda curvature, p: np.array([1+curvature*i*(p-i) for i in range(1, p)])
-print('bump_quadratic', bump_quadratic(1,9))
+print('bump_quadratic', bump_quadratic(0,9))
+
 #a_bump = 2*np.max(bump_quadratic(curvature=1, p=9)) + 1
 #print('a_bump:', a_bump)
-curvature = 0.06  # curvature 0.06 in A_glasso corresp to 1.9 in A_flasso
-A9bump = Acustom(a=np.ones(9), b=bump_quadratic(curvature=curvature, p=9))
-print('A9bump:\n', A9bump)
+curvature = 0.06  # 0.06  # curvature 0.06 in A_glasso corresp to 1.9 in A_flasso
+A9bump = Acustom(a=np.ones(9), b=(0.65)*bump_quadratic(curvature=curvature, p=9))
+print('A9bump:\n', np.round(A9bump,3))
 flassoA = Acustom(a=np.ones(9), b=np.ones(8)*sum(A9bump[i][i] for i in range(9))*(1/8))
-print('flassoA:\n', flassoA)
+print('flassoA:\n', np.round(flassoA,3))
 #print('bump_quadratic:', bump_quadratic(5,9))
 plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
                  C=block_diag_matrix9,
@@ -435,21 +437,21 @@ plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
                  n=100,
                  Cov=0.2**2*block_diag_matrix9,
                  flasso=True,
-                 #A_flasso=flassoA,
+                 A_flasso=(1 / np.sum(A9bump)) * 9 * flassoA,
                  glasso=True,
                  A_glasso=(1 / np.sum(A9bump)) * 9 * A9bump,  #Acustom(a=np.ones(9), b=np.ones(8)), #(1/np.sum(A9Bcustom))*9*A9Bcustom,
                  smooth=True)
 
 
 
-# plot_performance(b_0=np.array([0, 1]),
-#                  C=np.array([[1,0.8],[0.8,1]]),
-#                  lambdas=np.array([1.2, 0.8]),
-#                  x=x, #np.linspace(0.48, 0.55, 10)
-#                  n=200,
-#                  Cov=0.2**2*np.array([[1,0.8],[0.8,1]]),
-#                  glasso=True,
-#                  smooth=True)
+plot_performance(b_0=np.array([0, 1]),
+                 C=np.array([[1,0.8],[0.8,1]]),
+                 lambdas=np.array([1.2, 0.8]),
+                 x=x, #np.linspace(0.48, 0.55, 10)
+                 n=200,
+                 Cov=0.2**2*np.array([[1,0.8],[0.8,1]]),
+                 glasso=True,
+                 smooth=True)
 
 rho = 0.5
 
@@ -540,6 +542,7 @@ def plot_performance_tripple(b_0, C1, C2, C3, lambdas, x, n, Cov1=None, Cov2=Non
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
 
 alpha1 = 2/3-0.05
 alpha2 = 2/3
