@@ -102,7 +102,7 @@ def patternMSE(b_0, C, lambdas, n, Cov = None):
 '''
 
 
-def patternMSE(b_0, C, lambdas, n, Cov=None, glasso=False, A = None):
+def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None):
     """
     Calculate mean squared error (MSE), probability of pattern and support recovery, and dimension reduction
     for a given pattern vector 'b_0', covariance C, and penalty sequence lambdas, using FISTA algorithm for SLOPE.
@@ -140,7 +140,7 @@ def patternMSE(b_0, C, lambdas, n, Cov=None, glasso=False, A = None):
         W = np.random.multivariate_normal(np.zeros(p), Cov)
 
         # Perform SLOPE optimization using PGD and FISTA algorithm
-        if glasso == True:
+        if genlasso == True:
             if A is None:
                 A = Acustom(a=np.ones(len(b_0)), b=np.ones(len(b_0)-1))
             u_hat = admm_glasso(C=C, A=A, w=W, beta0=b_0, lambdas=1.0)
@@ -222,13 +222,13 @@ print('small_step', pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1
 # print('SLOPE_patMSE:', patternMSE(b_0 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C = block_diag_matrix9, lambdas = 10*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), n = 100))
 
 
-print('glasso_patMSE:', patternMSE(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
-                                   C=block_diag_matrix9,
-                                   lambdas=0*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-                                   Cov=0.2**2*block_diag_matrix9,
-                                   n=100,
-                                   glasso=True,
-                                   A=40*AFLmon(9, 0.1)))
+# print('glasso_patMSE:', patternMSE(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
+#                                    C=block_diag_matrix9,
+#                                    lambdas=0*np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+#                                    Cov=0.2**2*block_diag_matrix9,
+#                                    n=100,
+#                                    glasso=True,
+#                                    A=40*AFLmon(9, 0.1)))
 
 
 
@@ -303,7 +303,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     for i in range(len(x)):
         resultSLOPE = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n)
         #resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * np.ones(len(b_0)), n=n)
-        resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, glasso=True, A=x[i]*Acustom(a=np.ones(len(b_0)), b=np.zeros(len(b_0)-1)))
+        resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True, A=x[i]*Acustom(a=np.ones(len(b_0)), b=np.zeros(len(b_0)-1)))
         # using admm for lasso instead of pgd_slope_b_0_FISTA
 
         MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
@@ -317,20 +317,20 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
         if flasso == True:
             if A_flasso is None:
                 A_flasso = Acustom(a=np.ones(len(b_0)), b=np.ones(len(b_0) - 1))
-            resultflasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, glasso=True,
-                                      A=x[i]*flassoA*(1/np.sum(A_flasso))*len(b_0))
+            resultflasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True,
+                                      A=x[i]*A_flasso)
             Mseflasso= np.append(Mseflasso, resultflasso[0])
             Pattflasso = np.append(Pattflasso, resultflasso[1])
-            Supportflasso = np.append(Supportflasso, resultflasso[2])
+            #Supportflasso = np.append(Supportflasso, resultflasso[2])
 
         if glasso == True:
             if A_glasso is None:
                 A_glasso = Acustom(a=np.ones(len(b_0)), b=np.ones(len(b_0) - 1))
-            resultglasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, glasso=True,
+            resultglasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True,
                                       A=x[i] * A_glasso)
             Mseglasso= np.append(Mseglasso, resultglasso[0])
             Pattglasso = np.append(Pattglasso, resultglasso[1])
-            Supportglasso = np.append(Supportglasso, resultglasso[2])
+            #Supportglasso = np.append(Supportglasso, resultglasso[2])
 
         resultOLS = 0.5*(MseSLOPE[0] + MseLasso[0])
     if smooth == True:
@@ -365,12 +365,12 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
     plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
     if flasso == True:
-        plt.plot(x, Mseflasso, label='RMSE FLasso', color='purple', lw=1.5, alpha=0.9)
-        plt.plot(x, Pattflasso, label='recovery FLasso', color='purple', linestyle='dashed', lw=1.5)
+        plt.plot(x, Mseflasso, label='RMSE FLasso', color='orange', lw=1.5, alpha=0.9)
+        plt.plot(x, Pattflasso, label='recovery FLasso', color='orange', linestyle='dashed', lw=1.5)
 
     if glasso == True:
-        plt.plot(x, Mseglasso, label='RMSE ConFLasso', color='orange', lw=1.5, alpha=0.9)
-        plt.plot(x, Pattglasso, label='recovery ConFLasso', color='orange', linestyle='dashed', lw=1.5)
+        plt.plot(x, Mseglasso, label='RMSE ConFLasso', color='purple', lw=1.5, alpha=0.9)
+        plt.plot(x, Pattglasso, label='recovery ConFLasso', color='purple', linestyle='dashed', lw=1.5)
 
     #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
     #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
@@ -425,56 +425,92 @@ print('bump_quadratic', bump_quadratic(0,9))
 #a_bump = 2*np.max(bump_quadratic(curvature=1, p=9)) + 1
 #print('a_bump:', a_bump)
 curvature = 0.06  # 0.06  # curvature 0.06 in A_glasso corresp to 1.9 in A_flasso
-A9bump = Acustom(a=np.ones(9), b=(0.65)*bump_quadratic(curvature=curvature, p=9))
+cluster_scaling = 0.65
+A9bump = Acustom(a=np.ones(9), b=cluster_scaling*bump_quadratic(curvature=curvature, p=9))
 print('A9bump:\n', np.round(A9bump,3))
 flassoA = Acustom(a=np.ones(9), b=np.ones(8)*sum(A9bump[i][i] for i in range(9))*(1/8))
 print('flassoA:\n', np.round(flassoA,3))
 #print('bump_quadratic:', bump_quadratic(5,9))
-plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
-                 C=block_diag_matrix9,
-                 lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-                 x=np.linspace(0, 2, 20),  # np.linspace(0.48, 0.55, 10)
-                 n=100,
-                 Cov=0.2**2*block_diag_matrix9,
-                 flasso=True,
-                 A_flasso=(1 / np.sum(A9bump)) * 9 * flassoA,
-                 glasso=True,
-                 A_glasso=(1 / np.sum(A9bump)) * 9 * A9bump,  #Acustom(a=np.ones(9), b=np.ones(8)), #(1/np.sum(A9Bcustom))*9*A9Bcustom,
-                 smooth=True)
 
-
-
-plot_performance(b_0=np.array([0, 1]),
-                 C=np.array([[1,0.8],[0.8,1]]),
-                 lambdas=np.array([1.2, 0.8]),
-                 x=x, #np.linspace(0.48, 0.55, 10)
-                 n=200,
-                 Cov=0.2**2*np.array([[1,0.8],[0.8,1]]),
-                 glasso=True,
-                 smooth=True)
-
-rho = 0.5
-
-# plot_performance(b_0=np.array([0, 1, 0, 1]), #interesting [1,1,0,1], [1,1,1,1], [0,1,0,1]
-#                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
-#                  lambdas=np.array([1.55, 1.25, 0.75, 0.65]),
-#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
-#                  n=200,
-#                  Cov=0.3**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
-#                  glasso=True,
-#                  A=(1/2.3)*np.array([[1, -1, 0, 0], [0, 1.1, -1.1, 0], [0, 0, 1, -1], [2.3,0,0,0],[0,2.3,0,0],[0,0,2.3,0],[0,0,0,2.3]]),
+# plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
+#                  C=block_diag_matrix9,
+#                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+#                  x=np.linspace(0, 2, 20),  # np.linspace(0.48, 0.55, 10)
+#                  n=100,
+#                  Cov=0.2**2*block_diag_matrix9,
+#                  flasso=True,
+#                  A_flasso=flassoA,
+#                  #glasso=True,
+#                  #A_glasso=A9bump,  #Acustom(a=np.ones(9), b=np.ones(8)), #(1/np.sum(A9Bcustom))*9*A9Bcustom,
 #                  smooth=True)
 
 
-# plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 1, 1, 1]),
-#                  C=(1-rho) * np.identity(9) + rho * np.ones((9, 9)),
-#                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+
+# plot_performance(b_0=np.array([1, 0]),
+#                  C=np.array([[1, 0.8], [0.8, 1]]),
+#                  lambdas=np.array([1.2, 0.8]),
+#                  x=np.linspace(0, 3, 20), #np.linspace(0.48, 0.55, 10)
+#                  n=100,
+#                  Cov=0.2**2*np.array([[1, 0.8], [0.8, 1]]),
+#                  flasso=True,
+#                  A_flasso=Acustom(a=np.ones(2), b=np.ones(1)),
+#                  glasso=True,
+#                  A_glasso=Acustom(a=np.ones(2), b=np.ones(1)),
+#                  smooth=True)
+
+rho = 0.8
+
+# plot_performance(b_0=np.array([0, 2, 0, 2]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] slope best [0,1,1,0] lasso best
+#                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
 #                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
 #                  n=100,
-#                  Cov=0.02**2*(1-rho) * np.identity(9) + rho * np.ones((9, 9)),
-#                  glasso=True,
-#                  A=(1/np.sum(A9Bcustom))*9*A9Bcustom,
+#                  Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  flasso=True,
+#                  A_flasso=Acustom(a=np.ones(4), b=0.5 * np.ones(3)),
+#                  #glasso=True,
+#                  #A_glasso=Acustom(a=np.ones(4), b=1 * np.array([0.9, 1.2, 0.9])),
 #                  smooth=True)
+
+
+# plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1], [0,0,1,0] lasso best
+#                  C=np.array([[1,rho,0,0],[rho,1,0, 0],[0,0,1,rho],[0,0,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  lambdas=np.array([1.6, 1.2, 0.6, 0.4]),
+#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
+#                  n=200,
+#                  Cov=0.4**2*np.array([[1,rho,0,0],[rho,1,0, 0],[0,0,1,rho],[0,0,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  flasso=True,
+#                  A_flasso=Acustom(a=np.ones(4), b=0.5 * np.ones(3)),
+#                  #glasso=True,
+#                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
+#                  smooth=True)
+
+# rho = 0.5
+# plot_performance(b_0=np.array([2, 2, 2, 2]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] lasso best
+#                  C=np.array([[1,rho,rho,rho],[rho,1,rho, rho],[rho,rho,1,rho],[rho,rho,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
+#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
+#                  n=100,
+#                  Cov=0.4**2*np.array([[1,rho,rho,rho],[rho,1,rho, rho],[rho,rho,1,rho],[rho,rho,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  flasso=True,
+#                  A_flasso=Acustom(a=np.ones(4), b=0.5 * np.ones(3)),
+#                  #glasso=True,
+#                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
+#                  smooth=True)
+
+rho = 0.3
+plot_performance(b_0=np.array([1, 1, 2, 1, 1, 1, 2, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] lasso best
+                 C=(1-rho) * np.identity(9) + rho * np.ones((9, 9)),
+                 lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+                 x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
+                 n=300,
+                 Cov=0.4**2*(1-rho) * np.identity(9) + rho * np.ones((9, 9)), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+                 flasso=True,
+                 A_flasso=Acustom(a=np.ones(9), b=0.5 * np.ones(8)),
+                 #glasso=True,
+                 #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
+                 smooth=True)
+
 
 
 #phase transition in pattern recovery for SLOPE as correlation increases

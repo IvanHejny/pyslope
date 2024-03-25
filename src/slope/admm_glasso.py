@@ -64,7 +64,8 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
     return x
 
 
-'''
+#'''
+print('admm_test:', admm_glasso(C=np.array([[1, 0.8], [0.8, 1]]), A=np.array([[1, -1], [1, 0], [0, 1]]), w=np.array([1, 0.86]), beta0=np.array([0, 1]), lambdas=1.0, iter=100))
 #print(admm_glasso(C=np.identity(3), A=np.array([[1, -1, 0], [0, 1.15, -1.15]]), w=np.array([1, 1, 1]), beta0=np.array([1, 4, 4]), lambdas=400, iter=100))
 #print(admm_glasso(C=np.identity(3), A=np.array([[1, -1, 0], [0, 1.15, -1.15]]), w=np.array([1, 1, 1]), beta0=np.array([1, 5, 5]), lambdas=400, iter=100))
 #np.diag(np.sign(A @ beta0))
@@ -74,7 +75,7 @@ def admm_glasso(C, A, w, beta0, lambdas, rho=1.0, x0=None, u0=None, z0=None, ite
 #print('[1,4,4]:\n', np.diag(np.sign(np.array([[1, -1, 0], [0, 1.15, -1.15]]) @ np.array([1, 4, 4]))))
 #print('[1,5,5]:\n', np.diag(np.sign(np.array([[1, -1, 0], [0, 1.15, -1.15]]) @ np.array([1, 5, 5]))))
 #print(np.sign(5*1.15-5*1.15))
-'''
+#'''
 # penalty matrices in generalized lasso
 def AFL(p, a=1): #Fused Lasso + Lasso, tuned by a. For a=0, Lasso.
     A = np.zeros((2 * p - 1, p))
