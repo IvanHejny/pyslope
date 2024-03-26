@@ -389,7 +389,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
 
-    plt.legend(fontsize=14)
+    #plt.legend(fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -460,11 +460,11 @@ print('flassoA:\n', np.round(flassoA,3))
 
 rho = 0.8
 
-plot_performance(b_0=np.array([0, 0, 1, 0]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
+plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
                  x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)
-                 n=100,
+                 n=15000,
                  Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]),  # (1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  flasso=True,
                  A_flasso=Acustom(a=np.ones(4), b=1 * np.ones(3)),

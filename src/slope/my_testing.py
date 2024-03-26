@@ -145,12 +145,13 @@ print('bump_quadratic:', bump_quadratic(5,9))
 #print('log_vector:', np.log(np.arange(2, 10)))  #
 #print('log_vector_flip:', np.flip(np.log(np.arange(2, 10))))
 #print('log_bump_vector:', (np.log(np.arange(2, 10)) + np.flip(np.log(np.arange(2, 10))))/2)
-A3Bcustom = Acustom(a=np.zeros(3), b=b[:2])
-#print('A3Bcustom:\n', A3Bcustom)
-#print(glasso_sampler(np.identity(3), A3Bcustom, beta3, 40))
+A3Bcustom = Acustom(a=2.23*np.ones(3), b=np.array([1.03, 1.2]))
+print('A3Bcustom:\n', A3Bcustom)
+print(glasso_sampler(np.identity(3), A3Bcustom, np.array([1,1,2]), 400))
+
 #print(glasso_sampler(np.identity(3), A3Bcustom, beta3bug, 40))
 A4Bcustom = Acustom(a=2*np.ones(4), b=np.ones(3))
-print(glasso_sampler(np.identity(4), A4Bcustom, np.array([1,0,1,1]), 400))
+#print(glasso_sampler(np.identity(4), A4Bcustom, np.array([1,0,1,1]), 400))
 
 A5Bcustom = Acustom(a=np.zeros(5), b=np.log(np.arange(2, 6)))
 #print(glasso_sampler(np.identity(5), A5Bcustom, beta5, 400))
