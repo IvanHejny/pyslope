@@ -460,17 +460,17 @@ print('flassoA:\n', np.round(flassoA,3))
 
 rho = 0.8
 
-# plot_performance(b_0=np.array([0, 2, 0, 2]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] slope best [0,1,1,0] lasso best
-#                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
-#                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
-#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
-#                  n=100,
-#                  Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
-#                  flasso=True,
-#                  A_flasso=Acustom(a=np.ones(4), b=0.5 * np.ones(3)),
-#                  #glasso=True,
-#                  #A_glasso=Acustom(a=np.ones(4), b=1 * np.array([0.9, 1.2, 0.9])),
-#                  smooth=True)
+plot_performance(b_0=np.array([0, 0, 1, 0]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
+                 C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+                 lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
+                 x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)
+                 n=100,
+                 Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]),  # (1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+                 flasso=True,
+                 A_flasso=Acustom(a=np.ones(4), b=1 * np.ones(3)),
+                 #glasso=True,
+                 #A_glasso=Acustom(a=np.ones(4), b=0.4 * np.array([1, 1, 1])),
+                 smooth=True)
 
 
 # plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1], [0,0,1,0] lasso best
@@ -498,19 +498,19 @@ rho = 0.8
 #                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
 #                  smooth=True)
 
-rho = 0.3
-plot_performance(b_0=np.array([1, 1, 2, 1, 1, 1, 2, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] lasso best
-                 C=(1-rho) * np.identity(9) + rho * np.ones((9, 9)),
-                 lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-                 x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
-                 n=300,
-                 Cov=0.4**2*(1-rho) * np.identity(9) + rho * np.ones((9, 9)), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
-                 flasso=True,
-                 A_flasso=Acustom(a=np.ones(9), b=0.5 * np.ones(8)),
-                 #glasso=True,
-                 #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
-                 smooth=True)
-
+# rho = 0.3
+# plot_performance(b_0=np.array([1, 1, 2, 1, 1, 1, 2, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] lasso best
+#                  C=(1-rho) * np.identity(9) + rho * np.ones((9, 9)),
+#                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
+#                  n=300,
+#                  Cov=0.4**2*(1-rho) * np.identity(9) + rho * np.ones((9, 9)), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  flasso=True,
+#                  A_flasso=Acustom(a=np.ones(9), b=0.5 * np.ones(8)),
+#                  #glasso=True,
+#                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
+#                  smooth=True)
+#
 
 
 #phase transition in pattern recovery for SLOPE as correlation increases
