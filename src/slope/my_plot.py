@@ -233,55 +233,6 @@ print('small_step', pgd_slope_b_0_ISTA(C=np.array([[1, 1/3], [1/3, 1]]), W=my_W1
 
 
 
-# print(np.sign(pattern(np.array([0,0,-1.3,1.3, 2.7]))))
-
-# p=4 simulations
-'''
-# Define the range of x values
-x = np.linspace(0, 3, 24)  # Generates 10 points between 0 and 5
-
-# Calculate y values for each function
-
-PattSLOPE = np.empty(shape=(0, ))
-MseSLOPE = np.empty(shape=(0, ))
-PattLasso = np.empty(shape=(0, ))
-MseLasso = np.empty(shape=(0, ))
-SupportSLOPE = np.empty(shape=(0, ))
-SupportLasso = np.empty(shape=(0, ))
-for i in range(len(x)):
-    resultSLOPE = patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = x[i]*np.array([1.3, 1.1, 0.9, 0.7]), n = 50)
-    resultLasso = patternMSE(b_0 = np.array([0, 1, 1, 1]), C = C_block1, lambdas = x[i]*np.array([1, 1, 1, 1 ]), n = 50)
-    MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
-    PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
-    SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
-    MseLasso = np.append(MseLasso, resultLasso[0])
-    PattLasso = np.append(PattLasso, resultLasso[1])
-    SupportLasso = np.append(SupportLasso, resultLasso[2])
-
-#print(PattLasso)
-#print(MseLasso)
-
-# Plot the functions on the same graph
-plt.figure(figsize=(3, 6))
-plt.plot(x, MseSLOPE, label='SLOPE RMSE', color='green')  # Plot RMSE of SLOPE in green
-plt.plot(x, PattSLOPE, label='SLOPE pattern recovery', color='blue')  # Plot probability of pattern recovery by SLOPE in blue
-plt.plot(x, SupportSLOPE, label='SLOPE support recovery', color='black') # Plot prob of support recovery by SLOPE in black
-plt.plot(x, MseLasso, label='Lasso RMSE', color='orange') # Plot RMSE of Lasso in red
-plt.plot(x, PattLasso, label='Lasso pattern recovery', color='red') # Plot prob of pattern by Lasso in red
-plt.plot(x, SupportLasso, label='Lasso support recovery', color='purple') # Plot prob of support recovery by Lasso in purple
-
-plt.xlabel('penalty scaling $\sigma$')
-plt.ylabel('Performance')
-plt.title('Pattern Recovery and RMSE')
-caption_text = 'Asymptotic performance of SLOPE and Lasso in terms of MSE and Pattern recovery, with $patt(b^0) = [0, 1, 1, 1]$, $C$, and penalty $\lambda = \sigma[1.3, 1.1, 0.9, 0.7]$ (SLOPE) and $\lambda = \sigma[1, 1, 1, 1]$ (Lasso).'
-#plt.figtext(0.5, 0.01, caption_text, wrap =True, ha='center', va='center', fontsize=10, color='black')
-plt.figtext(0.5, +0.02, caption_text, wrap=True, horizontalalignment='center', fontsize=10)
-plt.legend()  # Show legend to differentiate between functions
-plt.grid(True)
-plt.tight_layout()
-plt.show()
-#'''
-
 
 def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = None, glasso=False, A_glasso = None, smooth = None):
     PattSLOPE = np.empty(shape=(0,))
@@ -385,7 +336,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     plt.xlabel(r'$\alpha$', fontsize=16)  # penalty scaling
     #plt.ylabel('Performance')
     #plt.title('Pattern Recovery and RMSE')
-    caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
+    #caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
 
@@ -424,47 +375,35 @@ print('bump_quadratic', bump_quadratic(0,9))
 
 #a_bump = 2*np.max(bump_quadratic(curvature=1, p=9)) + 1
 #print('a_bump:', a_bump)
-curvature = 0.06  # 0.06  # curvature 0.06 in A_glasso corresp to 1.9 in A_flasso
-cluster_scaling = 0.65
+curvature = 0.04  # 0.06  # curvature 0.06 in A_glasso corresp to 1.9 in A_flasso
+cluster_scaling = 0.8
 A9bump = Acustom(a=np.ones(9), b=cluster_scaling*bump_quadratic(curvature=curvature, p=9))
 print('A9bump:\n', np.round(A9bump,3))
 flassoA = Acustom(a=np.ones(9), b=np.ones(8)*sum(A9bump[i][i] for i in range(9))*(1/8))
 print('flassoA:\n', np.round(flassoA,3))
 #print('bump_quadratic:', bump_quadratic(5,9))
 
-# plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]),
-#                  C=block_diag_matrix9,
-#                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-#                  x=np.linspace(0, 2, 20),  # np.linspace(0.48, 0.55, 10)
-#                  n=100,
-#                  Cov=0.2**2*block_diag_matrix9,
-#                  flasso=True,
-#                  A_flasso=flassoA,
-#                  #glasso=True,
-#                  #A_glasso=A9bump,  #Acustom(a=np.ones(9), b=np.ones(8)), #(1/np.sum(A9Bcustom))*9*A9Bcustom,
-#                  smooth=True)
+plot_performance(b_0=np.array([1, 1, 1, 0, 0, 0, 2, 2, 2]),
+                  C=block_diag_matrix9,
+                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+                  x=np.linspace(0, 2, 29),  # np.linspace(0.48, 0.55, 10)
+                  n=10000,
+                  Cov=0.2**2*block_diag_matrix9,
+                  flasso=True,
+                  A_flasso=flassoA,
+                  glasso=True,
+                  A_glasso=A9bump,  #Acustom(a=np.ones(9), b=np.ones(8)), #(1/np.sum(A9Bcustom))*9*A9Bcustom,
+                  smooth=True)
 
 
-
-# plot_performance(b_0=np.array([1, 0]),
-#                  C=np.array([[1, 0.8], [0.8, 1]]),
-#                  lambdas=np.array([1.2, 0.8]),
-#                  x=np.linspace(0, 3, 20), #np.linspace(0.48, 0.55, 10)
-#                  n=100,
-#                  Cov=0.2**2*np.array([[1, 0.8], [0.8, 1]]),
-#                  flasso=True,
-#                  A_flasso=Acustom(a=np.ones(2), b=np.ones(1)),
-#                  glasso=True,
-#                  A_glasso=Acustom(a=np.ones(2), b=np.ones(1)),
-#                  smooth=True)
 
 rho = 0.8
-
+# main simulations where SLOPE can beat Fused Lasso
 plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
                  x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)
-                 n=15000,
+                 n=300,
                  Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]),  # (1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  flasso=True,
                  A_flasso=Acustom(a=np.ones(4), b=1 * np.ones(3)),
@@ -473,6 +412,7 @@ plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1], [1,0,1,0] s
                  smooth=True)
 
 
+# other simulations
 # plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1], [0,0,1,0] lasso best
 #                  C=np.array([[1,rho,0,0],[rho,1,0, 0],[0,0,1,rho],[0,0,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
 #                  lambdas=np.array([1.6, 1.2, 0.6, 0.4]),
@@ -498,19 +438,7 @@ plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1], [1,0,1,0] s
 #                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
 #                  smooth=True)
 
-# rho = 0.3
-# plot_performance(b_0=np.array([1, 1, 2, 1, 1, 1, 2, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] lasso best
-#                  C=(1-rho) * np.identity(9) + rho * np.ones((9, 9)),
-#                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
-#                  n=300,
-#                  Cov=0.4**2*(1-rho) * np.identity(9) + rho * np.ones((9, 9)), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
-#                  flasso=True,
-#                  A_flasso=Acustom(a=np.ones(9), b=0.5 * np.ones(8)),
-#                  #glasso=True,
-#                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
-#                  smooth=True)
-#
+
 
 
 #phase transition in pattern recovery for SLOPE as correlation increases
@@ -568,10 +496,10 @@ def plot_performance_tripple(b_0, C1, C2, C3, lambdas, x, n, Cov1=None, Cov2=Non
     plt.xticks(fontsize=14)  # Change 12 to the desired font size for x-axis tick labels
     plt.yticks(fontsize=14)  # Change 12 to the desired font size for y-axis tick labels
 
-    plt.xlabel(r'$\alpha$', fontsize=16) #penalty scaling
+    plt.xlabel(r'$\sigma$', fontsize=16) #penalty scaling
     plt.ylabel('pattern recovery', fontsize=16)
     #plt.title('Pattern Recovery and RMSE')
-    caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
+    caption_text = r'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
     plt.legend(fontsize=14)
@@ -616,44 +544,6 @@ print('test_mean', test_mean/20)
 '''
 
 
-
-'''
-# Define the range of x values
-x = np.linspace(0, 1, 20)  # Generates 10 points between 0 and 5
-
-# Calculate y values for each function
-alpha = 2/3
-PattSLOPE = np.empty(shape=(0, ))
-MseSLOPE = np.empty(shape=(0, ))
-PattLasso = np.empty(shape=(0, ))
-MseLasso = np.empty(shape=(0, ))
-for i in range(len(x)):
-    result = patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = x[i]*np.array([0.8, 1.2]), n = 50)
-    resultLasso = patternMSE(b_0 = np.array([1, 0]), C = np.array([[1, alpha], [alpha, 1]]), lambdas = x[i]*np.array([1, 1]), n = 50)
-    PattSLOPE = np.append(PattSLOPE, result[0])
-    MseSLOPE = np.append(MseSLOPE, result[1])
-    PattLasso = np.append(PattLasso, resultLasso[0])
-    MseLasso = np.append(MseLasso, resultLasso[1])
-#print(PattLasso)
-#print(MseLasso)
-
-# Plot the functions on the same graph
-plt.figure(figsize=(3, 6))
-plt.plot(x, PattSLOPE, label='SLOPE pattern recovery', color='blue')  # Plot probability of pattern recovery by SLOPE in blue
-plt.plot(x, MseSLOPE, label='SLOPE MSE', color='green')  # Plot MSE of SLOPE in green
-plt.plot(x, PattLasso, label='Lasso pattern recovery', color='red')
-plt.plot(x, MseLasso, label='Lasso MSE', color='orange') # Plot MSE of Lasso in red
-plt.xlabel('penalty scaling $\sigma$')
-plt.ylabel('Performance')
-plt.title('Pattern Recovery and MSE')
-caption_text = 'Figure 1. Asymptotic performance of SLOPE and Lasso in terms of MSE and Pattern recovery, with $patt(b^0) = [1, 0]$, $C$ a correlation matrix with off diagonal entry $2/3$, and penalty $\lambda = \sigma[0.8, 1.2]$ (SLOPE) and $\lambda = \sigma[1, 1]$ (Lasso).'
-#plt.figtext(0.5, 0.01, caption_text, wrap =True, ha='center', va='center', fontsize=10, color='black')
-plt.figtext(0.5, +0.02, caption_text, wrap=True, horizontalalignment='center', fontsize=10)
-plt.legend()  # Show legend to differentiate between functions
-plt.grid(True)
-plt.tight_layout()
-plt.show()
-'''
 
 
 '''
