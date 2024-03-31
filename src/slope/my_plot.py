@@ -288,7 +288,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
         # Spline interpolation for smoother curve
         #x_smooth = np.concatenate((x, np.linspace(x.min(), x.max(), 10*(len(x)-1)+1)))
         #x_smooth = np.sort(x_smooth)
-        x_smooth = np.linspace(x.min(), x.max(), 4 * (len(x) - 1) + 1)
+        x_smooth = np.linspace(x.min(), x.max(), 20 * (len(x) - 1) + 1)
 
         spl1 = PchipInterpolator(x, MseSLOPE)  #
         spl2 = PchipInterpolator(x, PattSLOPE)  #
@@ -386,8 +386,8 @@ print('flassoA:\n', np.round(flassoA,3))
 plot_performance(b_0=np.array([1, 1, 1, 0, 0, 0, 2, 2, 2]),
                   C=block_diag_matrix9,
                   lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-                  x=np.linspace(0, 2, 29),  # np.linspace(0.48, 0.55, 10)
-                  n=10000,
+                  x=np.linspace(0, 2, 24),  # np.linspace(0.48, 0.55, 10)
+                  n=15000,
                   Cov=0.2**2*block_diag_matrix9,
                   flasso=True,
                   A_flasso=flassoA,
