@@ -105,7 +105,7 @@ def patternMSE(b_0, C, lambdas, n, Cov = None):
 def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None):
     """
     Calculate mean squared error (MSE), probability of pattern and support recovery, and dimension reduction
-    for a given pattern vector 'b_0', covariance C, and penalty sequence lambdas, using FISTA algorithm for SLOPE.
+    for a given pattern vector 'b_0', covariance C, and penalty sequence lambdas, for SLOPE, or possibly Generalized/Fused Lasso.
 
     Parameters:
         b_0 (array-like): True pattern vector to recover.

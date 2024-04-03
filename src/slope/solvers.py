@@ -282,7 +282,7 @@ def prox_slope_new(y, lambdas):
     return y
 
 def prox_slope_b_0(b_0, y, lambdas):
-    """Compute the prox operator for the SLOPE directional derivative J'_{lambda}, i.e; prox_{J_{b^0,lambda}}(y) = argmin_u (1/2)||u-y||^2+J'_{lambda}(u)
+    """Compute the prox operator for the SLOPE directional derivative J'_{lambda}, i.e; prox_{J'_{lambda}(b^0; * )}(y) = argmin_u (1/2)||u-y||^2+J'_{lambda}(b^0; u)
 
        Parameters
        ----------
@@ -323,8 +323,8 @@ def prox_slope_b_0(b_0, y, lambdas):
 #print(prox_slope_b_0([0, 2, 0, 2, -2, -2, 1, 1], [5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0], [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]))
 
 def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
-    """Compute the solution to minimize: 1/2 u^T*C*u-u^T*W+J_{b^0,lambda}(u),
-     where J_{b^0,lambda} is the slope norm
+    """Minimizes: 1/2 u^T*C*u-u^T*W+J'_{lambda}(b^0; u),
+     where J'_{lambda}(b^0; u) is the directional SLOPE derivative
        Parameters
        ----------
        C: np.array
@@ -350,14 +350,15 @@ def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
     #lambdas = [np.float(i) for i in lambdas]
     u_0 = np.zeros(len(b_0))
     prox_step = u_0
-    stepsize_t = np.float(t)
+    stepsize_t = np.float64(t)
     for i in range(n):
-        prox_step = prox_slope_b_0(b_0, prox_step - stepsize_t * (C @ prox_step - W), lambdas * stepsize_t)
+        grad_step = prox_step - stepsize_t * (C @ prox_step - W)
+        prox_step = prox_slope_b_0(b_0, grad_step, lambdas * stepsize_t)
     return(prox_step)
 
 def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
-    """Compute the solution to minimize: 1/2 u^T*C*u-u^T*W+J_{b^0,lambda}(u),
-     where J_{b^0,lambda} is the slope norm
+    """Minimizes: 1/2 u^T*C*u-u^T*W+J'_{lambda}(b^0; u),
+     where J'_{lambda}(b^0; u) is the directional SLOPE derivative
        Parameters
        ----------
        C: np.array
