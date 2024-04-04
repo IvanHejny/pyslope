@@ -421,3 +421,40 @@ def pattern(u):
 
     return result.astype(int)
 
+def pattern_matrix(vector):
+  """Creates a pattern matrix representing non-zero clusters in the input vector.
+
+  Args:
+      vector: A NumPy vector.
+
+  Returns:
+      A NumPy matrix where each row represents a basis vector corresponding to a non-zero cluster.
+  """
+  sign = np.sign(vector)
+  sign_matrix = np.diag(sign)
+  vector = np.abs(vector)
+  unique_values, counts = np.unique(vector[np.nonzero(vector)], return_counts=True)  # Get unique non-zero values and counts
+  pattern_matrix = np.zeros((len(unique_values), len(vector)))  # Initialize pattern matrix
+
+  for i, (value, count) in enumerate(zip(unique_values, counts)):
+    pattern_matrix[i, vector == value] = 1  # Set 1s for matching values in each cluster
+    # Limit the number of 1s to the count of the unique value
+    # pattern_matrix[i, pattern_matrix[i] == 1] = np.arange(1, count +1)  # Set unique markers for duplicates
+
+  return  (pattern_matrix @ sign_matrix).T  # .astype(int) convert to integer type
+
+
+#print('pattern matrix:\n', pattern_matrix(np.array([0, 2, 0, -2, 2, 1, 1])))
+
+def proj_onto_pattern_space(vector):
+    """Projection matrix onto the (SLOPE) pattern space of some vector
+
+    Args:
+        vector: A NumPy vector.
+
+    Returns:
+        A NumPy projection matrix
+    """
+    U = pattern_matrix(vector)
+    return U @ np.linalg.inv(U.T @ U) @ U.T
+
