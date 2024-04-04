@@ -384,11 +384,12 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
     u_kmin2 = u_0
     u_kmin1 = u_0
     v = u_0
-    stepsize_t = t
+    stepsize_t = np.float64(t)
     k=1
     for k in range(n):
-        v = u_kmin1 +((k-2)/(k+1))*(u_kmin1-u_kmin2)
-        u_k = prox_slope_b_0(b_0, v - stepsize_t * (C @ v - W), lambdas * stepsize_t)
+        v = u_kmin1 + ((k-2)/(k+1))*(u_kmin1-u_kmin2)
+        grad_step = v - stepsize_t * (C @ v - W)
+        u_k = prox_slope_b_0(b_0, grad_step, stepsize_t * lambdas)
         u_kmin2 = u_kmin1
         u_kmin1 = u_k
     return (u_k)

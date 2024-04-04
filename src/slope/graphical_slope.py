@@ -79,8 +79,8 @@ print('C_tilde:\n', Hessian(Sigma4c))
 print('Sigma3:\n', Sigma3)
 #print('Theta3:\n', np.linalg.inv(Sigma3))
 print('C_tilde:\n', Hessian(Sigma3))
-print('D:\n', D(3))
-print('D^TD:\n', D(3).T @ D(3))
+#print('D:\n', D(3))
+#print('D^TD:\n', D(3).T @ D(3))
 
 
 C_tilde = Hessian(Sigma4c)
@@ -91,12 +91,30 @@ print('Theta4c:\n', Theta4c, '\n', pattern(np.round(mat_to_vech(Theta4c),4)))
 lambdas = np.array([10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0])
 #for n in range(1000,1005):
 #    print('gslp:\n', vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1,0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]), b_0=signal, lambdas=0*lambdas, t=0.2, n=n)))
-for n in range(200,201):
-    print('gslp:\n', vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+
+truth = vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                       b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=10000))
+for n in range(150,151):
+    print('gslp_Fista:\n', vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
                                        b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n)))
-    print('diff:', n, '\n', np.round(vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
-                                       b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n))-vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
-                                       b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n-1)),5))
+    #print('diff_Fista:', n, '\n', np.round(vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+    #                                   b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n))-vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+    #                                   b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n-1)),5))
+    print('error_Fista:\n',
+          np.linalg.norm(truth-vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                          b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n))))
+    print('gslp_Ista:\n',
+          vech_to_mat(pgd_slope_b_0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                          b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n)))
+    #print('diff_Ista:', n, '\n', np.round(
+    #    vech_to_mat(pgd_slope_b_0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+    #                                    b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n)) - vech_to_mat(
+    #        pgd_slope_b_0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+    #                            b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n - 1)), 5))
+    print('error_Ista:\n',
+          np.linalg.norm(truth - vech_to_mat(
+              pgd_slope_b_0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                  b_0=signal, lambdas=0.1 * lambdas, t=0.2, n=n))))
 
 
 #print('p:', int(-0.5 + np.sqrt(0.25 + 2 * len(mat_to_vech(Theta4c)))))
@@ -171,15 +189,96 @@ def pgd_gslope_Theta0_ISTA(C, W, vechTheta0, lambdas, t, n):
         grad_step_diag = split_diag_and_low(grad_step)[0]
         grad_step_low = split_diag_and_low(grad_step)[1]
 
-        prox_step_low = prox_slope_b_0(split_diag_and_low(vechTheta0)[1], grad_step_low, split_diag_and_low(lambdas)[1] * stepsize_t) #prox step only on the lower diagonal entries
+        prox_step_low = prox_slope_b_0(split_diag_and_low(vechTheta0)[1], grad_step_low, lambdas * stepsize_t) #prox step only on the lower diagonal entries
         prox_step_diag = grad_step_diag
         prox_step = join_diag_and_low(prox_step_diag, prox_step_low)
     return(prox_step)
 
+def pgd_gslope_Theta0_FISTA(C, W, vechTheta0, lambdas, n, t=None):
+    """Minimizes: 1/2 u^T*C*u-u^T*W+J'_{lambda}(vechTheta0; u),
+     where J'_{lambda}(b^0; u) is the directional SLOPE derivative
+       Parameters
+       ----------
+       C: np.array
+           covariance matrix of the data
+       W: np.array
+           p-dimensional vector, in our paper it arises from normal N(0, \sigma^2 * C ),
+           where \sigma^2 is variance of the noise
+       vechTheta0: np.array
+           pattern vector of the true signal
+       lambdas : np.array
+           vector of regularization weights
+       t: np.float
+           step size
+       n: integer
+           number of steps before termination
+
+       Returns
+       -------
+       array
+           the unique solution to the minimization problem, given by a vector u.
+       """
+    u_0 = np.zeros(len(vechTheta0))
+    u_kmin2 = u_0
+    u_kmin1 = u_0
+    v = u_0
+    if t==None:
+        t = 1/max(np.linalg.eigvals(C))  # default stepsize = 1/max(eigenvalues of C) to guarantee O(1/n^2) convergence
+    stepsize_t = np.float64(t)
+    k=1
+    for k in range(n):
+        v = u_kmin1 + ((k-2)/(k+1))*(u_kmin1-u_kmin2)
+        grad_step = v - stepsize_t * (C @ v - W)
+        grad_step_diag = split_diag_and_low(grad_step)[0]
+        grad_step_low = split_diag_and_low(grad_step)[1]
+
+        prox_step_low = prox_slope_b_0(split_diag_and_low(vechTheta0)[1], grad_step_low, lambdas * stepsize_t) #prox step only on the lower diagonal entries
+        prox_step_diag = grad_step_diag
+        u_k = join_diag_and_low(prox_step_diag, prox_step_low)
+        u_kmin2 = u_kmin1
+        u_kmin1 = u_k
+    return (u_k)
+
+
+
+
+lambdas = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0])
 print('evals:\n', np.linalg.eigvals(C_tilde))
+print('1/max(eval):\n', 1/max(np.linalg.eigvals(C_tilde)))
+
+
+
+W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1])
+est_truth_gslp= vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=W,
+                                       b_0=signal, lambdas=8*0.1 * np.array([10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]), t=0.2, n=1000))
+est_truth_low= vech_to_mat(pgd_gslope_Theta0_ISTA(C=C_tilde, W=W,
+                                                  vechTheta0=signal, lambdas=8*0.1 * lambdas, t=0.2, n=1000))
+
+print('est_truth_gslp:\n', est_truth_gslp, '\n', 'est_truth_low:\n', est_truth_low)
+print('err_est_truth_gslp:\n', est_truth_gslp - Theta4c, '\n', 'err_est_truth_low:\n', est_truth_low - Theta4c)
+for i in range(200, 210):
+    Fista = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W,
+                                       vechTheta0=signal, lambdas=8*0.1 * lambdas, t=0.2, n=i))
+    Fistadefault = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W,
+                                       vechTheta0=signal, lambdas=8*0.1 * lambdas, n=i))
+
+    print('Fista:\n', np.linalg.norm(Fista - est_truth_low), '\n', 'Fistadefault:\n', np.linalg.norm(Fistadefault - est_truth_low))
+'''
 for n in range(200,201):
     print('gslp_onlylow_pen:\n', vech_to_mat(pgd_gslope_Theta0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
                                        vechTheta0=signal, lambdas=0.1 * lambdas, t=0.2, n=n)))
-    print('diff:', n, '\n', np.round(vech_to_mat(pgd_gslope_Theta0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
-                                       vechTheta0=signal, lambdas=0.1 * lambdas, t=0.2, n=n))-vech_to_mat(pgd_gslope_Theta0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
-                                       vechTheta0=signal, lambdas=0.1 * lambdas, t=0.2, n=n-1)),9))
+    print('diffIsta:', n, '\n', np.round(truthIsta-vech_to_mat(pgd_gslope_Theta0_ISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                       vechTheta0=signal, lambdas=0.1 * lambdas, t=0.2, n=n)),9))
+    print('gslp_onlylow_penFista:\n',
+          vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                             vechTheta0=signal, lambdas=0.1 * lambdas, n=n)))
+    print('gslp_onlylow_penFista_with_t:\n',
+          vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                              vechTheta0=signal, lambdas=0.1 * lambdas, n=n, t=0.2)))
+    print('diffFista_with_t:', n, '\n', np.round(truthFista - vech_to_mat(
+        pgd_gslope_Theta0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                                vechTheta0=signal, lambdas=0.1 * lambdas, n=n, t=0.2)), 9))
+    print('diffFista:', n, '\n', np.round(truthFista - vech_to_mat(
+        pgd_gslope_Theta0_FISTA(C=C_tilde, W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1]),
+                               vechTheta0=signal, lambdas=0.1 * lambdas, n=n)), 9))
+'''

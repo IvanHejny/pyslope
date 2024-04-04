@@ -254,7 +254,7 @@ for i in range(40):
 
 #MAIN TEST
 #prox_slope, ISTA, FISTA
-#'''
+'''
 b_0_test0 = np.array([0, 0, 0, 0])
 b_0_test1 = np.array([1, 1, -1, -1])
 b_0_test01 = np.array([0, 0, 1, 1])
@@ -275,15 +275,15 @@ print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60.0, 50.0, -5.0, 10.0], 
 print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60, 50, -5, 10], [65, 42, 40, 40])) #correct after resolved type issues
 print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.6, n = 50))
 print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.35, n = 50))
-#'''
+'''
 
 
 #Further ISTA, FISTA examples
-'''
+#'''
 b_0_test3 = np.array([0, 2, 0, 2, -2, -2, 1, 1])
 y_test3 = np.array([5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0])
 
-lambda_test3 = [65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0]
+lambda_test3 = np.array([65.0, 42.0, 40.0, 20.0, 18.0, 15.0, 3.0, 1.0])
 lambda_test4 = [35.0, 35.0, 5.2, 5.2, 5.2, 5.2, 5.2, 5.2]
 lambda_test5 = [35.0, 35.0, 4.8, 4.8, 4.8, 4.8, 4.8, 4.8]
 
@@ -294,17 +294,18 @@ print('prox_slope_b_0_5:', prox_slope_b_0(b_0_test3, y_test3, lambda_test5))
 
 C_test3 = np.identity(8)
 W_test3 = np.array([5.0, -2.0, 3.0, 3.1, -2.5, -5.2, 0.7, -7.0])
-print("pdg_slope_b_0_FISTA:", pgd_slope_b_0_FISTA(C_test3, W_test3, b_0_test3, lambda_test3, stepsize_t, 20))
+for i in range(20,25):
+    print("pdg_slope_b_0_FISTA:", pgd_slope_b_0_FISTA(np.identity(8), W_test3, b_0_test3, lambda_test3, 0.3, i))
 
 # Compare with
-print('b_0:', b_0_test3)
-print("zero-cluster:", prox_slope(y=np.array([5.0, 4.0]), lambdas=np.array([3.0, 1.0])),
-      "one-cluster:", prox_slope_on_b_0_single_cluster(b_0=np.array([1, 1]), y=np.array([12.0, 17.0]),
-                                                       lambdas=np.array(np.array([18.0, 15.0]))),
-      "two-cluster:",
-      prox_slope_on_b_0_single_cluster(b_0=np.array([2, 2, -2, -2]), y=np.array([60.0, 50.0, 10.0, -5.0]),
-                                       lambdas=np.array([65.0, 42.0, 40.0, 20.0])))
-'''
+#print('b_0:', b_0_test3)
+#print("zero-cluster:", prox_slope(y=np.array([5.0, 4.0]), lambdas=np.array([3.0, 1.0])),
+#      "one-cluster:", prox_slope_on_b_0_single_cluster(b_0=np.array([1, 1]), y=np.array([12.0, 17.0]),
+#                                                       lambdas=np.array(np.array([18.0, 15.0]))),
+#      "two-cluster:",
+#      prox_slope_on_b_0_single_cluster(b_0=np.array([2, 2, -2, -2]), y=np.array([60.0, 50.0, 10.0, -5.0]),
+#                                       lambdas=np.array([65.0, 42.0, 40.0, 20.0])))
+#'''
 
 
 #permutation dependencies for prox_slope
