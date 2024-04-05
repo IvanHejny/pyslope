@@ -335,7 +335,7 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
                 A = Acustom(a=np.ones(len(vechTheta0)), b=np.ones(len(vechTheta0)-1))
             u_hat = admm_glasso(C=C, A=A, w=W, beta0=pat_signal, lambdas=1.0)
         else:
-            u_hat = pgd_gslope_Theta0_FISTA(C=C, W=W, Theta0=Theta0, lambdas=lambdas_low, t=stepsize_t, n=200)
+            u_hat = pgd_gslope_Theta0_FISTA(C=C, W=W, Theta0=Theta0, lambdas=lambdas_low, t=stepsize_t, n=400)
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -363,9 +363,9 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
     return rmse, pattern_recovery_rate, pat_rmse
 
 
-print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 0* lambdas_low, n=100))
-print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * lambdas_low, n=100))
-print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * np.ones(6), n=100))
+#print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 0* lambdas_low, n=100))
+#print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * lambdas_low, n=100))
+#print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * np.ones(6), n=100))
 
 def lin_lambdas(p):
     return np.flip(np.arange(1,p+1))/((p+1)/2)  # linear penalty sequence, normalized so that average penalty is 1
@@ -383,20 +383,21 @@ def plot_performance(Sigma0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
 
     PattSLOPE = np.empty(shape=(0,))
     MseSLOPE = np.empty(shape=(0,))
-    SupportSLOPE = np.empty(shape=(0,))
+    #SupportSLOPE = np.empty(shape=(0,))
     patMSESLOPE = np.empty(shape=(0,))
 
     PattLasso = np.empty(shape=(0,))
     MseLasso = np.empty(shape=(0,))
-    SupportLasso = np.empty(shape=(0,))
+    #SupportLasso = np.empty(shape=(0,))
+    patMSELasso = np.empty(shape=(0,))
 
     Pattglasso = np.empty(shape=(0,))
     Mseglasso = np.empty(shape=(0,))
-    Supportglasso = np.empty(shape=(0,))
+    #Supportglasso = np.empty(shape=(0,))
 
     Pattflasso = np.empty(shape=(0,))
     Mseflasso = np.empty(shape=(0,))
-    Supportflasso = np.empty(shape=(0,))
+    #Supportflasso = np.empty(shape=(0,))
 
     for i in range(len(x)):
         resultSLOPE = gpatternMSE(Theta0=Theta0, C=C, Cov=Cov, lambdas_low=x[i] * lambdas_low, n=n)
@@ -406,10 +407,6 @@ def plot_performance(Sigma0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
 
         MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
         PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
-        if patMSE == True:
-            patMSESLOPE = np.append(patMSESLOPE, resultSLOPE[2])
-        #SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
-
         MseLasso = np.append(MseLasso, resultLasso[0])
         PattLasso = np.append(PattLasso, resultLasso[1])
         #SupportLasso = np.append(SupportLasso, resultLasso[2])
@@ -431,6 +428,11 @@ def plot_performance(Sigma0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
             #  Supportglasso = np.append(Supportglasso, resultglasso[2])
 
         resultOLS = 0.5*(MseSLOPE[0] + MseLasso[0])
+
+        if patMSE == True:
+            patMSESLOPE = np.append(patMSESLOPE, resultSLOPE[2])
+        #SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
+            patMSELasso = np.append(patMSELasso, resultLasso[2])
     if smooth == True:
         #  Spline interpolation for smoother curve
         #  x_smooth = np.concatenate((x, np.linspace(x.min(), x.max(), 10*(len(x)-1)+1)))
@@ -448,7 +450,9 @@ def plot_performance(Sigma0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
         #patMSESLOPE = spl11(x_smooth)
         if patMSE == True:
             spl11 = PchipInterpolator(x, patMSESLOPE)
+            spl12 = PchipInterpolator(x, patMSELasso)
             patMSESLOPE = spl11(x_smooth)
+            patMSELasso = spl12(x_smooth)
         if flasso == True:
             spl4 = PchipInterpolator(x, Mseflasso)
             spl5 = PchipInterpolator(x, Pattflasso)
@@ -468,7 +472,8 @@ def plot_performance(Sigma0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
     plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
     plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
     if patMSE == True:
-        plt.plot(x, patMSESLOPE, label='patMSE SLOPE', color='green', linestyle='dotted', lw=1.5)
+        plt.plot(x, patMSESLOPE, label='patRMSE SLOPE', color='green', linestyle='dotted', lw=1.5)
+        plt.plot(x, patMSELasso, label='patRMSE Lasso', color='blue', linestyle='dotted', lw=1.5)
 
     if flasso == True:
         plt.plot(x, Mseflasso, label='RMSE FLasso', color='orange', lw=1.5, alpha=0.9)
@@ -509,5 +514,17 @@ print('Theta4c:\n', np.linalg.inv(Sigma4c))
 
 Sigma4 = (1-rho)*np.identity(4)+rho*np.ones((4,4))
 print('Theta4:\n', np.linalg.inv(Sigma4))
+Sigma9 = (1-rho)*np.identity(9)+rho*np.ones((9,9))
 
-plot_performance(Sigma0=Sigma4, x=np.linspace(0, 0.5, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=100, smooth=True)
+
+Theta_test = np.linalg.inv(((1-rho)*np.identity(4)+rho*np.ones((4,4)))) + np.diag([0.1, 0.05, 0, -0.05])
+print('Theta_test', Theta_test)
+Sigma_test = np.linalg.inv(Theta_test)
+print('Sigma_test', Sigma_test)
+print('Theta_test:\n', np.linalg.inv(Sigma_test))
+
+#plot_performance(Sigma0=Sigma4, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=1000, smooth=True)
+#plot_performance(Sigma0=Sigma_test, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=100, smooth=True) # patMSE goes to zero if the diagonal is not clustered
+
+print('evals', np.linalg.eigvals(Hessian(Sigma9)))
+plot_performance(Sigma0=Sigma9, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma9), n=1000, smooth=True)
