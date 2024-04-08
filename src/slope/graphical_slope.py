@@ -367,9 +367,7 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
 #print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * lambdas_low, n=100))
 #print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * np.ones(6), n=100))
 
-def lin_lambdas(p):
-    return np.flip(np.arange(1,p+1))/((p+1)/2)  # linear penalty sequence, normalized so that average penalty is 1
-print(lin_lambdas(6))
+
 def plot_performance(Sigma0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=False, flasso=False, A_flasso = None, glasso=False, A_glasso = None, smooth = None):
     Theta0 = np.linalg.inv(Sigma0)
     vechTheta0 = mat_to_vech(Theta0)

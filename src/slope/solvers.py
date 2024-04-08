@@ -394,6 +394,9 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
         u_kmin1 = u_k
     return (u_k)
 
+def lin_lambdas(p):
+    return np.flip(np.arange(1,p+1))/((p+1)/2)  # linear penalty sequence, normalized so that average penalty is 1
+
 def pattern(u):
     """
     Calculate the SLOPE pattern of a vector: rank(abs(u_i)) * sgn(u_i).

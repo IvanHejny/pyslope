@@ -197,7 +197,13 @@ block_diag_matrix9 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3))
                               [np.zeros((3,3)), compound_block, np.zeros((3,3))],
                                [np.zeros((3,3)), np.zeros((3,3)), compound_block]])
 
-print(block_diag_matrix9)
+block_diag_matrix12 = np.block([[compound_block, np.zeros((3,3)), np.zeros((3,3)), np.zeros((3,3))],
+                                [np.zeros((3,3)), compound_block, np.zeros((3,3)), np.zeros((3,3))],
+                                 [np.zeros((3,3)), np.zeros((3,3)), compound_block, np.zeros((3,3))],
+                                 [np.zeros((3,3)), np.zeros((3,3)), np.zeros((3,3)), compound_block]])
+
+print('block_diag_9', block_diag_matrix9)
+print('block_diag_12', block_diag_matrix12)
 
 '''
 my_W1 = np.array([-1.621111, 1.16656]) #np.random.multivariate_normal(np.zeros(2), np.array([[1, 2/3], [2/3, 1]]))
@@ -340,7 +346,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
 
-    #plt.legend(fontsize=14)
+    plt.legend(fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -378,21 +384,43 @@ print('bump_quadratic', bump_quadratic(0,9))
 curvature = 0.04  # 0.06  # curvature 0.06 in A_glasso corresp to 1.9 in A_flasso
 cluster_scaling = 0.8
 A9bump = Acustom(a=np.ones(9), b=cluster_scaling*bump_quadratic(curvature=curvature, p=9))
-print('A9bump:\n', np.round(A9bump,3))
-flassoA = Acustom(a=np.ones(9), b=np.ones(8)*sum(A9bump[i][i] for i in range(9))*(1/8))
-print('flassoA:\n', np.round(flassoA,3))
+#print('A9bump:\n', np.round(A9bump,3))
+flassoA9 = Acustom(a=np.ones(9), b=np.ones(8) * sum(A9bump[i][i] for i in range(9)) * (1 / 8))
+#print('flassoA9:\n', np.round(flassoA9, 3))
 #print('bump_quadratic:', bump_quadratic(5,9))
 
-plot_performance(b_0=np.array([1, 1, 1, 0, 0, 0, 2, 2, 2]),
-                  C=block_diag_matrix9,
-                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
-                  x=np.linspace(0, 2, 24),  # np.linspace(0.48, 0.55, 10)
-                  n=15000,
-                  Cov=0.2**2*block_diag_matrix9,
+print('slope pen', lin_lambdas(12))
+curvature = 0.02 # (0.04, 0.8) for mon beta
+cluster_scaling = 0.8
+A12bump = Acustom(a=np.ones(12), b=cluster_scaling*bump_quadratic(curvature=curvature, p=12))
+print('A12bump:\n', np.round(A12bump,3))
+flassoA12 = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12bump[i][i] for i in range(12)) * (1 / 11))
+#print('flassoA12:\n', np.round(flassoA12, 3))
+
+# plot_performance(b_0=np.array([1, 1, 1, 0, 0, 0, 2, 2, 2]),
+#                  C=block_diag_matrix9,
+#                  lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]),
+#                  x=np.linspace(0, 2, 24),  # np.linspace(0.48, 0.55, 10)
+#                  n=100,
+#                  Cov=0.2**2*block_diag_matrix9,
+#                  flasso=True,
+#                  A_flasso=flassoA9,
+#                  glasso=True,
+#                  A_glasso=A9bump,  #Acustom(a=np.ones(9), b=np.ones(8)), #(1/np.sum(A9Bcustom))*9*A9Bcustom,
+#                  smooth=True)
+
+
+
+plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array([1, 1, 1, 0, 0, 0, 3, 3, 3, 2, 2, 2])
+                  C=block_diag_matrix12,
+                  lambdas=lin_lambdas(12),
+                  x=np.linspace(0, 2, 24),
+                  n=100,
+                  Cov=0.2**2*block_diag_matrix12, #block_diag_matrix12,
                   flasso=True,
-                  A_flasso=flassoA,
+                  A_flasso=flassoA12,
                   glasso=True,
-                  A_glasso=A9bump,  #Acustom(a=np.ones(9), b=np.ones(8)), #(1/np.sum(A9Bcustom))*9*A9Bcustom,
+                  A_glasso=A12bump,
                   smooth=True)
 
 

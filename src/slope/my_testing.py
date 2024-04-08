@@ -177,7 +177,16 @@ A3custom = Acustom(a=a[:3], b=np.ones(2))
 #A4custom = Acustom(a=a[:4], b=np.ones(3))
 #print(glasso_sampler(np.identity(4), A4custom, beta4no0rev, 40))
 
-
+bump_quadratic = lambda curvature, p: np.array([1+curvature*i*(p-i) for i in range(1, p)])
+print('bump_quadratic', bump_quadratic(-0.01,12))
+curvature = 0.04
+cluster_scaling = 0.8
+A12Bcustom = Acustom(a=np.ones(12), b=cluster_scaling*bump_quadratic(curvature=curvature, p=12))
+print('A12bump:\n', np.round(A12Bcustom,3))
+#flassoA12 = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12Bcustom[i][i] for i in range(12)) * (1 / 11))
+#print('flassoA12:\n', np.round(flassoA12, 3))
+#print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 2]), 400))
+print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]), 400))
 '''
 a5 = 0.1
 a6 = 0.1
@@ -279,7 +288,7 @@ print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = np.identity(4), W = y_t
 
 
 #Further ISTA, FISTA examples
-#'''
+'''
 b_0_test3 = np.array([0, 2, 0, 2, -2, -2, 1, 1])
 y_test3 = np.array([5.0, 60.0, 4.0, 50.0, 10.0, -5.0, 12.0, 17.0])
 
@@ -305,7 +314,7 @@ for i in range(20,25):
 #      "two-cluster:",
 #      prox_slope_on_b_0_single_cluster(b_0=np.array([2, 2, -2, -2]), y=np.array([60.0, 50.0, 10.0, -5.0]),
 #                                       lambdas=np.array([65.0, 42.0, 40.0, 20.0])))
-#'''
+'''
 
 
 #permutation dependencies for prox_slope
@@ -362,7 +371,7 @@ for i in range(len(b_0_test2)):
 print(cluster_boxes)
 '''
 #partition and reconstruction
-#'''
+'''
 #b_0_test1 = [0, 0, 1, 1, 2, -2, 2]
 lambda_test1 = [7, 6, 5, 4, 3, 2, 1]
 
@@ -409,5 +418,5 @@ b_0_partition = y_partition_by_b_0(b_0_test3, b_0_test3)
 #print(u_reconstruction(b_0_test3, prox_k_clusters))
 #print(b_0_partition)
 #print(y_partition_by_b_0(b_0_test3, y_test3))
-#'''
+'''
 
