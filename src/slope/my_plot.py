@@ -145,7 +145,7 @@ def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None):
                 A = Acustom(a=np.ones(len(b_0)), b=np.ones(len(b_0)-1))
             u_hat = admm_glasso(C=C, A=A, w=W, beta0=b_0, lambdas=1.0)
         else:
-            u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=20 )
+            u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=20 ) # 20 iterations for FISTA, might need more in some cases (like in graphical examples we need around n=200)
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -294,31 +294,34 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
         # Spline interpolation for smoother curve
         #x_smooth = np.concatenate((x, np.linspace(x.min(), x.max(), 10*(len(x)-1)+1)))
         #x_smooth = np.sort(x_smooth)
-        x_smooth = np.linspace(x.min(), x.max(), 20 * (len(x) - 1) + 1)
+        x_smooth = np.linspace(x.min(), x.max(), 20 * (len(x) - 1) + 1)  # (4, 20) times more points than x
 
         spl1 = PchipInterpolator(x, MseSLOPE)  #
         spl2 = PchipInterpolator(x, PattSLOPE)  #
         spl3 = PchipInterpolator(x, MseLasso)  #
+        spl4 = PchipInterpolator(x, PattLasso)  #
 
         MseSLOPE = spl1(x_smooth)
         PattSLOPE = spl2(x_smooth)
         MseLasso = spl3(x_smooth)
+        PattLasso = spl4(x_smooth)
         if flasso == True:
-            spl4 = PchipInterpolator(x, Mseflasso)
-            spl5 = PchipInterpolator(x, Pattflasso)
-            Mseflasso = spl4(x_smooth)
-            Pattflasso = spl5(x_smooth)
+            spl5 = PchipInterpolator(x, Mseflasso)
+            spl6 = PchipInterpolator(x, Pattflasso)
+            Mseflasso = spl5(x_smooth)
+            Pattflasso = spl6(x_smooth)
         if glasso == True:
-            spl6 = PchipInterpolator(x, Mseglasso)
-            spl7 = PchipInterpolator(x, Pattglasso)
-            Mseglasso = spl6(x_smooth)
-            Pattglasso = spl7(x_smooth)
+            spl7 = PchipInterpolator(x, Mseglasso)
+            spl8 = PchipInterpolator(x, Pattglasso)
+            Mseglasso = spl7(x_smooth)
+            Pattglasso = spl8(x_smooth)
 
         x = x_smooth
 
     # Plot the functions on the same graph
     plt.figure(figsize=(6, 6))
     plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
+    plt.plot(x, PattLasso, label='recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by Lasso
     plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
     plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
     if flasso == True:
@@ -346,7 +349,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
 
-    plt.legend(fontsize=14)
+    #plt.legend(fontsize=14)  # font size for legend
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -411,17 +414,17 @@ flassoA12 = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12bump[i][i] for i in ra
 
 
 
-plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array([1, 1, 1, 0, 0, 0, 3, 3, 3, 2, 2, 2])
-                  C=block_diag_matrix12,
-                  lambdas=lin_lambdas(12),
-                  x=np.linspace(0, 2, 24),
-                  n=100,
-                  Cov=0.2**2*block_diag_matrix12, #block_diag_matrix12,
-                  flasso=True,
-                  A_flasso=flassoA12,
-                  glasso=True,
-                  A_glasso=A12bump,
-                  smooth=True)
+# plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array([1, 1, 1, 0, 0, 0, 3, 3, 3, 2, 2, 2])
+#                   C=block_diag_matrix12,
+#                   lambdas=lin_lambdas(12),
+#                   x=np.linspace(0, 2, 24),
+#                   n=100,
+#                   Cov=0.2**2*block_diag_matrix12, #block_diag_matrix12,
+#                   flasso=True,
+#                   A_flasso=flassoA12,
+#                   glasso=True,
+#                   A_glasso=A12bump,
+#                   smooth=True)
 
 
 
@@ -431,7 +434,7 @@ plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1], [1,0,1,0] s
                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
                  x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)
-                 n=300,
+                 n=500,
                  Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]),  # (1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  flasso=True,
                  A_flasso=Acustom(a=np.ones(4), b=1 * np.ones(3)),
