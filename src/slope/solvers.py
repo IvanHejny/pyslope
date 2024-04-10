@@ -449,6 +449,27 @@ def pattern_matrix(vector):
 
 #print('pattern matrix:\n', pattern_matrix(np.array([0, 2, 0, -2, 2, 1, 1])))
 
+def pattern_matrix_Lasso(vector):
+  """Creates a Lasso pattern matrix for the input vector.
+
+  Args:
+      vector: A NumPy vector.
+
+  Returns:
+      A NumPy matrix Lasso pattern matrix.
+  """
+  p=len(vector)
+  m=np.count_nonzero(vector)
+  pattern_matrix = np.zeros((p, m))  # Initialize pattern matrix
+  sign = np.sign(vector)
+  sign_matrix = np.diag(sign)
+  for i in range(m):
+      row_index = np.nonzero(vector)[0][i]
+      pattern_matrix[row_index, i] = 1  # Set 1s for matching values in each cluste
+  return  sign_matrix @ pattern_matrix   # .astype(int) convert to integer type
+
+#print('pattern_matrix_Lasso:\n', pattern_matrix_Lasso(np.array([0, 2, 0, -2, 2, 1, 1])))
+#print(np.nonzero(np.array([0, 2, 0, -2, 2, 1, 1])))
 def proj_onto_pattern_space(vector):
     """Projection matrix onto the (SLOPE) pattern space of some vector
 
