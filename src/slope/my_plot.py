@@ -330,7 +330,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
 
         resultOLS = 0.5*(MseSLOPE[0] + MseLasso[0])
     if reducedOLS == True:
-        reducedOLS = reducedOLSerror(b_0, C, n=40000, sigma=sigma)
+        reducedOLS = reducedOLSerror(b_0, C, n=80000, sigma=sigma)
 
     if smooth == True:
         # Spline interpolation for smoother curve
@@ -378,11 +378,12 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
     #plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
 
-    plt.scatter(0, resultOLS, color='red', label='RMSE OLS', alpha = 0.8) # Plot RMSE of OLS as a scatter point at 0
+    plt.scatter(0, resultOLS, color='red', label='RMSE OLS', alpha = 0.6, s=60) # Plot RMSE of OLS as a scatter point at 0
     #if reducedOLS == True:
-    plt.scatter(0, reducedOLS[1], color='blue', alpha = 0.6)  # reduced RMSE if Lasso pattern is known
-    plt.scatter(-0.01, reducedOLS[2], color='orange', alpha = 0.6)  # reduced RMSE if FusedLasso pattern is known
-    plt.scatter(0.01, reducedOLS[3], color='green', alpha = 0.6)  # reduced RMSE if SLOPE pattern is known
+    #plt.scatter(0.01, reducedOLS[0], color='black', alpha = 0.6)  # reduced RMSE if OLS pattern is known
+    plt.scatter(-0.02, reducedOLS[1], color='blue', alpha = 0.6, s=60)  # reduced RMSE if Lasso pattern is known
+    plt.scatter(-0.02, reducedOLS[2], color='orange', alpha = 0.6, s=60)  # reduced RMSE if FusedLasso pattern is known
+    plt.scatter(0, reducedOLS[3], color='green', alpha = 0.6, s=60)  # reduced RMSE if SLOPE pattern is known
 
     # Increase the size of x-axis and y-axis tick labels
     plt.xticks(fontsize=14)  # font size for x-axis tick labels
@@ -395,7 +396,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
 
-    plt.legend(fontsize=15)  # font size for legend
+    #plt.legend(fontsize=15)  # font size for legend
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -476,11 +477,11 @@ flassoA12 = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12bump[i][i] for i in ra
 
 rho = 0.8
 # main simulations where SLOPE can beat Fused Lasso
-plot_performance(b_0=np.array([0, 0, 1, 0]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
+plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
                  x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)
-                 n=15000,
+                 n=18000,
                  Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]),  # (1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  flasso=True,
                  A_flasso=Acustom(a=np.ones(4), b=1 * np.ones(3)),
