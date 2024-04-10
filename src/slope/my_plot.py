@@ -246,11 +246,17 @@ def reducedOLSerror(b_0, C, n=10000, sigma = 1):
     U_b0_Lasso = pattern_matrix_Lasso(b_0)
     p_red_Lasso = np.shape(U_b0_Lasso)[1]
     redC_Lasso = U_b0_Lasso.T @ C @ U_b0_Lasso  # reduced covariance matrix
-    redCinv_Lasso = np.linalg.inv(redC_Lasso)  # reduced error u_red has normal distribution with covariance sigma^2 * redCinv_SLOPE
+    redCinv_Lasso = np.linalg.inv(redC_Lasso)  # reduced error u_red has normal distribution with covariance sigma^2 * redCinv_Lasso
+
+    U_b0_Flasso = pattern_matrix_FLasso(b_0)
+    p_red_Flasso = np.shape(U_b0_Flasso)[1]
+    redC_Flasso = U_b0_Flasso.T @ C @ U_b0_Flasso  # reduced covariance matrix
+    redCinv_Flasso = np.linalg.inv(redC_Flasso)  # reduced error u_red has normal distribution with covariance sigma^2 * redCinv_Flasso
 
     MSE_OLS = 0
     redMSE_SLOPE = 0
     redMSE_Lasso = 0
+    redMSE_Flasso = 0
     for i in range(n):
         u_OLS = np.random.multivariate_normal(np.zeros(len(b_0)), sigma ** 2 * np.linalg.inv(C))
         norm2_OLS = np.linalg.norm(u_OLS) ** 2
@@ -263,8 +269,13 @@ def reducedOLSerror(b_0, C, n=10000, sigma = 1):
         u_red_Lasso = np.random.multivariate_normal(np.zeros(p_red_Lasso), sigma**2 * redCinv_Lasso)
         norm2_Lasso = np.linalg.norm(u_red_Lasso) ** 2
         redMSE_Lasso = redMSE_Lasso + norm2_Lasso
-    return  np.sqrt(MSE_OLS / n), np.sqrt(redMSE_Lasso / n), np.sqrt(redMSE_SLOPE / n)
-print('reducedOLSerror:', reducedOLSerror(b_0=np.array([1,1,2,2,2]), C=np.identity(5)))
+
+        u_red_Flasso = np.random.multivariate_normal(np.zeros(p_red_Flasso), sigma**2 * redCinv_Flasso)
+        norm2_Flasso = np.linalg.norm(u_red_Flasso) ** 2
+        redMSE_Flasso = redMSE_Flasso + norm2_Flasso
+
+    return  np.sqrt(MSE_OLS / n), np.sqrt(redMSE_Lasso / n), np.sqrt(redMSE_Flasso / n), np.sqrt(redMSE_SLOPE / n)
+print('reducedOLSerror:', reducedOLSerror(b_0=np.array([1,0,1,0]), C=np.identity(4)))
 
 
 
@@ -319,7 +330,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
 
         resultOLS = 0.5*(MseSLOPE[0] + MseLasso[0])
     if reducedOLS == True:
-        reducedOLS = reducedOLSerror(b_0, C, n=10000, sigma=sigma)
+        reducedOLS = reducedOLSerror(b_0, C, n=40000, sigma=sigma)
 
     if smooth == True:
         # Spline interpolation for smoother curve
@@ -367,10 +378,11 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
     #plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
 
-    plt.scatter(0, resultOLS, color='red', label='RMSE OLS') # Plot RMSE of OLS as a scatter point at 0
+    plt.scatter(0, resultOLS, color='red', label='RMSE OLS', alpha = 0.8) # Plot RMSE of OLS as a scatter point at 0
     #if reducedOLS == True:
-    plt.scatter(0, reducedOLS[1], color='blue')  # reduced RMSE if Lasso pattern is known
-    plt.scatter(0, reducedOLS[2], color='green')  # reduced RMSE if SLOPE pattern is known
+    plt.scatter(0, reducedOLS[1], color='blue', alpha = 0.6)  # reduced RMSE if Lasso pattern is known
+    plt.scatter(-0.01, reducedOLS[2], color='orange', alpha = 0.6)  # reduced RMSE if FusedLasso pattern is known
+    plt.scatter(0.01, reducedOLS[3], color='green', alpha = 0.6)  # reduced RMSE if SLOPE pattern is known
 
     # Increase the size of x-axis and y-axis tick labels
     plt.xticks(fontsize=14)  # font size for x-axis tick labels
@@ -383,7 +395,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
 
-    plt.legend(fontsize=14)  # font size for legend
+    plt.legend(fontsize=15)  # font size for legend
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -464,11 +476,11 @@ flassoA12 = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12bump[i][i] for i in ra
 
 rho = 0.8
 # main simulations where SLOPE can beat Fused Lasso
-plot_performance(b_0=np.array([1, 0, 1, 0]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
+plot_performance(b_0=np.array([0, 0, 1, 0]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
                  C=np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
                  x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)
-                 n=100,
+                 n=15000,
                  Cov=0.4**2*np.array([[1,0,rho,0],[0,1,0,rho],[rho,0,1,0],[0,rho,0,1]]),  # (1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  flasso=True,
                  A_flasso=Acustom(a=np.ones(4), b=1 * np.ones(3)),
