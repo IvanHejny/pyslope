@@ -500,8 +500,8 @@ def consecutive_cluster_sizes(b0):
   cluster_lengths = cluster_ends - cluster_starts
 
   return cluster_lengths
+#print('cluster_lengths:', consecutive_cluster_sizes(np.array([1, 1, 1, 0, 0, 1, 1, 3, 3, 3, 3])))
 
-print('cluster_lengths:', consecutive_cluster_sizes(np.array([1, 1, 1, 0, 0, 1, 1, 3, 3, 3, 3])))
 def pattern_matrix_FLasso(vector):
   """Creates a Fused Lasso pattern matrix for the input vector.
 
@@ -528,7 +528,7 @@ def pattern_matrix_FLasso(vector):
   zero_cols = np.all(pattern_matrix_Flasso == 0, axis=0)
   return  pattern_matrix_Flasso[:, ~ zero_cols] # removes zero columns
 
-
+'''
 print('pattern_matrix_Lasso:\n', pattern_matrix_Lasso(np.array([1,1,0,2,0,2])))
 print('pattern_matrix_FusedLasso:\n', pattern_matrix_FLasso(np.array([1,1,0,2,0,2])))
 print('pattern_matrix_SLOPE:\n', pattern_matrix(np.array([1,1,0,2,0,2])))
@@ -540,6 +540,7 @@ print('pattern_matrix_SLOPE:\n', pattern_matrix(np.array([0, 2, 0, -2, 2, 1, 1])
 print('pattern_matrix_Lasso:\n', pattern_matrix_Lasso(np.array([1, 0, 1, 0])))
 print('pattern_matrix_FusedLasso:\n', pattern_matrix_FLasso(np.array([1, 0, 1, 0])))
 print('pattern_matrix_SLOPE:\n', pattern_matrix(np.array([1, 0, 1, 0])))
+'''
 def proj_onto_pattern_space(vector):
     """Projection matrix onto the (SLOPE) pattern space of some vector
 

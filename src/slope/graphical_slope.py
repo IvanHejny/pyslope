@@ -92,12 +92,12 @@ for n in range(150,151):
                                  b_0=pat_Theta4c, lambdas=0.1 * lambdas_low, t=0.2, n=n))))
 '''
 
-#print('p:', int(-0.5 + np.sqrt(0.25 + 2 * len(mat_to_vech(Theta4c)))))
 def split_diag_and_low(vechTheta): # returns diagonal and lower triangular part of a symmetric matrix ( as two np.vectors )
     #  input can be a matrix or vectorized lower triangular part of that matrix
-    if len(vechTheta.shape) == 2:
+    if len(vechTheta.shape) == 2:  # if the input is a matrix, vectorize it
         vechTheta = mat_to_vech(vechTheta)
     p = int(-0.5 + np.sqrt(0.25 + 2 * len(vechTheta)))
+    # print('p:', int(-0.5 + np.sqrt(0.25 + 2 * len(mat_to_vech(Theta4c)))))
     all_indices = list(range(len(vechTheta)))
     diagonal_indices = []
     for i in range(1,p+1):
@@ -221,13 +221,15 @@ def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas, n, t=None):
 
 
 
-
-lambdas_low = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0]) / 3.5
-print('evals:\n', np.linalg.eigvals(C_tilde))
-print('1/max(eval):\n', 1/max(np.linalg.eigvals(C_tilde)))
-
 #convergence speed issues, number of iterates required is in the order of hundreds
 '''
+Theta4c = np.array([[4, 1.2, 1.2, 0], [1.2, 4, 1.2, 0], [1.2, 1.2, 4, 0], [0, 0, 0, 4]]) #increase the diagonal entries to 4 increases stepsize from 3.75 to 8.96
+C_tilde = Hessian(np.linalg.inv(Theta4c))
+lambdas_low = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0]) / 3.5
+print('evals:\n', np.linalg.eigvals(C_tilde))
+print('1/max(eval):\n', 1/max(np.linalg.eigvals(C_tilde))) # we want stepsize as large as possible, i.e. max(eval(Hessian)) as small as possible, i.e. 'precision Theta0 as 'large' as possible'
+
+
 W=np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1])
 est_truth_gslp= vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=W,
                                        b_0=signal, lambdas=8*0.1 * np.array([10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0])/55, t=0.2, n=1000))
@@ -339,28 +341,34 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
     #avg_dim_reduction = dim_reduction / n
 
     return rmse, pattern_recovery_rate, pat_rmse
+#Compound precision matrix
+Sigma4_compound = np.array([[1, 0.8, 0.8, 0.8], [0.8, 1, 0.8, 0.8], [0.8, 0.8, 1, 0.8], [0.8, 0.8, 0.8, 1]])
+Theta4_compound = np.linalg.inv(Sigma4_compound)
+#print('Theta4_compound:\n', Theta4_compound)
+#print('gpatternMSE_compound:\n', gpatternMSE(Theta0=Theta4_compound, lambdas_low = 0.5*lin_lambdas(6), n=10)) # recovers pattern in compound symmetric perfectly for large penalty
 
-Sigma4_custom = np.array([[1, 0.8, 0.8, 0.8], [0.8, 1, 0.8, 0.8], [0.8, 0.8, 1, 0.8], [0.8, 0.8, 0.8, 1]])
-Theta4_custom = np.linalg.inv(Sigma4_custom)
-print('Theta4_custom:\n', Theta4_custom)
-print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_custom, lambdas_low = lin_lambdas(6), n=10))
-Theta4_band = np.array([[1, 0.9, 0.8, 0.7], [0.9, 1, 0.9, 0.8], [0.8, 0.9, 1, 0.9], [0.7, 0.8, 0.9, 1]])
-print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_band, lambdas_low = 5*lin_lambdas(6), n=10))
-print('lin_lambdas\n:',lin_lambdas(6))
+#Block compound precision matrix
+Sigma8_block = np.block([[Sigma4_compound, np.zeros((4, 4))], [np.zeros((4, 4)), Sigma4_compound]])
+Theta8_block = np.linalg.inv(Sigma8_block)
+#print('Theta8_block:\n', np.round(Theta8_block,2))
+#print('gpatternMSE_block:\n', gpatternMSE(Theta0=Theta8_block, lambdas_low = 0.5*lin_lambdas(8*7/2), n=10))
+#print('gpatternMSE_block:\n', gpatternMSE(Theta0=Theta8_block, lambdas_low = 1*lin_lambdas(8*7/2), n=10))
+#print('gpatternMSE_block:\n', gpatternMSE(Theta0=Theta8_block, lambdas_low = 2*lin_lambdas(8*7/2), n=10)) #perfect pattern recovery
 
+#Band precision matrix
+#Theta4_band = np.array([[1, 0.9, 0.8, 0.7], [0.9, 1, 0.9, 0.8], [0.8, 0.9, 1, 0.9], [0.7, 0.8, 0.9, 1]])
+#print('gpatternMSE_band:\n', gpatternMSE(Theta0=Theta4_band, lambdas_low = 5*lin_lambdas(6), n=10)) # does not recover patterns in the band matrix properly
+#print('lin_lambdas\n:', lin_lambdas(6))
 
-Theta4_AR = np.array([[3, -1, 0, 0], [-1, 4, -1, 0], [0, -1, 4, -1], [0, 0, -1, 3]])
-print('Theta4_AR:\n', Theta4_AR)
-print('Sigma4_AR:\n', np.linalg.inv(Theta4_AR))
-
-print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 500*np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), n=10)) # recovers pattern
+#AR_precision matrix
+#Theta4_AR = np.array([[3, -1, 0, 0], [-1, 4, -1, 0], [0, -1, 4, -1], [0, 0, -1, 3]])
+#print('Theta4_AR:\n', Theta4_AR)
+#print('Sigma4_AR:\n', np.linalg.inv(Theta4_AR))
+#print('gpatternMSE_AR:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 100*np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), n=10)) # recovers pattern perfectly for large penalty
 #print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 50*np.ones(6), n=10))
-print('gpatternMSE:\n', gpatternMSE(Theta0=np.identity(4), lambdas_low = 50*np.ones(6), n=10))
+#print('gpatternMSE_id:\n', gpatternMSE(Theta0=np.identity(4), lambdas_low = 50*np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), n=10)) # recovers pattern perfectly for large penalty
 
 
-#print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 0* lambdas_low, n=100))
-#print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * lambdas_low, n=100))
-#print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 3 * 0.1 * np.ones(6), n=100))
 
 
 def plot_performance(Theta0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=False, flasso=False, A_flasso = None, glasso=False, A_glasso = None, smooth = None):
@@ -526,35 +534,31 @@ def plot_performance(Theta0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
 
 
 rho = 0.8
-Sigma4c = np.array([[1, rho, rho, 0], [rho, 1, rho, 0], [rho, rho, 1, 0], [0, 0, 0, 1]])
-C4c = Hessian(Sigma4c)
-print('Theta4c:\n', np.linalg.inv(Sigma4c))
 
 Sigma4 = (1-rho)*np.identity(4)+rho*np.ones((4,4))
 Theta4 = np.linalg.inv(Sigma4)
-print('Theta4:\n', np.linalg.inv(Sigma4))
+#print('Theta4:\n', np.linalg.inv(Sigma4))
 Sigma9 = (1-rho)*np.identity(9)+rho*np.ones((9,9))
 Theta9 = np.linalg.inv(Sigma9)
-print('Sigma9:\n', Sigma9)
-#print('Theta9:\n', np.linalg.inv(Sigma9))
+#print('Sigma9:\n', Sigma9)
 
-Theta_test = np.linalg.inv(((1-rho)*np.identity(4)+rho*np.ones((4,4)))) + np.diag([0.1, 0.05, 0, -0.05])
-print('Theta_test:\n', Theta_test)
-Sigma_test = np.linalg.inv(Theta_test)
-print('Sigma_test:\n', Sigma_test)
-print('Theta_test:\n', np.linalg.inv(Sigma_test))
-
-#plot_performance(Sigma0=Sigma4, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=1000, smooth=True)
-#plot_performance(Sigma0=Sigma_test, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=100, smooth=True) # patMSE goes to zero if the diagonal is not clustered
+#Sigma_test = (1-rho)*np.identity(4)+rho*np.ones((4,4)))) + np.diag([0.1, 0.05, 0, -0.05])
+#Theta_test = np.linalg.inv(Sigma_test)
+#print('Sigma_test:\n', Sigma_test)
+#print('Theta_test:\n', Theta_test)
+#plot_performance(Theta0=Theta_test, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=100, smooth=True) # patMSE goes to zero if the diagonal is not clustered
 
 #np.set_printoptions(linewidth=np.inf)
 np.set_printoptions(threshold=np.inf)
 
-print('Hessian(Sigma9):\n', Hessian(Sigma9))
-print('evals9', np.linalg.eigvals(Hessian(Sigma9)))
-print('evals4', np.linalg.eigvals(Hessian(Sigma4)))
-plot_performance(Theta0=Theta9, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta9)), n=50, smooth=True) #good simulation
-#plot_performance(Theta0=Theta4, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta4)), n=100, smooth=True) #
+#print('Hessian(Sigma9):\n', Hessian(Sigma9))
+#print('evals9', np.linalg.eigvals(Hessian(Sigma9)))
+#print('evals4', np.linalg.eigvals(Hessian(Sigma4)))
+print('lin_lambdas45:\n', lin_lambdas(9*8/2))
+#plot_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta9)), n=50, smooth=True) #good simulation
+#plot_performance(Theta0=Theta4, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta4)), n=100, smooth=True) # good
+plot_performance(Theta0=Theta8_block, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta8_block)), n=100, smooth=True)
+
 
 
 def create_band_matrix(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8, third_off_diag=0.7):
@@ -595,15 +599,7 @@ def create_band_matrix(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8,
 
 
 # Example usage
-print('band9:\n', create_band_matrix(9))
-print('band4:\n', create_band_matrix(4))
-Sigma4band = create_band_matrix(4)
-print('Theta4band:\n', np.round(np.linalg.inv(Sigma4band),2))
+#Theta4band = create_band_matrix(4)
+#print('Theta4band:\n', np.round(Theta4band,2))
 #plot_performance(Sigma0=np.linalg.inv(Sigma4band), x=np.linspace(0, 1.2, 10), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Sigma4band)), n=50, smooth=True) #penalization fails, SLOPE surprisingly even worse than Lasso
-Theta4_custom = np.array([[1, 0.8, 0.8, 0.8], [0.8, 1, 0.8, 0.8], [0.8, 0.8, 1, 0.8], [0.8, 0.8, 0.8, 1]])
-print('Sigma4_custom:\n', Sigma4_custom)
-#print('Theta4_custom:\n', np.linalg.inv(Sigma4_custom))
-
-#plot_performance(Theta0=Theta4_custom, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Theta4_custom), n=50, smooth=True) #good simulation
-
 
