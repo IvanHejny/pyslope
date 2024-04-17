@@ -366,7 +366,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
     if flasso == True:
         plt.plot(x, Mseflasso, label='RMSE FLasso', color='orange', lw=1.5, alpha=0.9)
-        plt.plot(x, Pattflasso, label='recovery FLasso', color='orange', linestyle='dashed', lw=1.5, alpha=0.7)# inc by 0.02 for better visibility if no pattern recovery
+        plt.plot(x, Pattflasso+0.02, label='recovery FLasso', color='orange', linestyle='dashed', lw=1.5, alpha=0.7)# inc by 0.02 for better visibility if no pattern recovery
 
     if glasso == True:
         plt.plot(x, Mseglasso, label='RMSE ConFLasso', color='purple', lw=1.5, alpha=0.9)
@@ -374,7 +374,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     if reducedOLS == True:
         reducedOLS = reducedOLSerror(b_0, C, n=100000, sigma=sigma)
         plt.scatter(-0.025, reducedOLS[1], color='blue', alpha=0.7, s=70)  # reduced RMSE if Lasso pattern is known
-        plt.scatter(-0.025, reducedOLS[2], color='orange', alpha=0.7, s=70)  # reduced RMSE if FusedLasso pattern is known
+        plt.scatter(0, reducedOLS[2], color='orange', alpha=0.7, s=70)  # reduced RMSE if FusedLasso pattern is known
         plt.scatter(0, reducedOLS[3], color='green', alpha=0.7, s=70)  # reduced RMSE if SLOPE pattern is known
         # plt.scatter(0.01, reducedOLS[0], color='black', alpha = 0.6)  # RMSE of OLS
 
@@ -477,7 +477,7 @@ flassoA12 = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12bump[i][i] for i in ra
 
 rho = 0.8
 # main simulations where SLOPE can beat Fused Lasso
-plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
+plot_performance(b_0=np.array([1, 0, 1, 0]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
                  C=np.array([[1, 0, rho, 0], [0, 1, 0, rho], [rho, 0, 1, 0], [0, rho, 0, 1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
                  x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)

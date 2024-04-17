@@ -336,6 +336,7 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
             u_hat = admm_glasso(C=C, A=A, w=W, beta0=pat_signal, lambdas=1.0)
         else:
             u_hat = pgd_gslope_Theta0_FISTA(C=C, W=W, Theta0=Theta0, lambdas=lambdas_low, t=stepsize_t, n=400)
+            print('u_hat\n:', vech_to_mat(np.round(u_hat, 2)))
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -361,6 +362,19 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
     #avg_dim_reduction = dim_reduction / n
 
     return rmse, pattern_recovery_rate, pat_rmse
+
+Sigma4_custom = np.array([[1, 0.8, 0.8, 0.8], [0.8, 1, 0.8, 0.8], [0.8, 0.8, 1, 0.8], [0.8, 0.8, 0.8, 1]])
+Theta4_custom = np.linalg.inv(Sigma4_custom)
+print('Theta4_custom:\n', Theta4_custom)
+print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_custom, lambdas_low = lin_lambdas(6), n=10))
+Theta4_band = np.array([[1, 0.9, 0.8, 0.7], [0.9, 1, 0.9, 0.8], [0.8, 0.9, 1, 0.9], [0.7, 0.8, 0.9, 1]])
+print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_band, lambdas_low = 5*lin_lambdas(6), n=10))
+
+Theta4_AR = np.array([[3, -1, 0, 0], [-1, 4, -1, 0], [0, -1, 4, -1], [0, 0, -1, 3]])
+print('Theta4_AR:\n', Theta4_AR)
+print('lin_lambdas\n:',lin_lambdas(6))
+print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 500*np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), n=10))
+#print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 50*np.ones(6), n=10))
 
 
 #print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4c, lambdas_low = 0* lambdas_low, n=100))
@@ -511,9 +525,12 @@ C4c = Hessian(Sigma4c)
 print('Theta4c:\n', np.linalg.inv(Sigma4c))
 
 Sigma4 = (1-rho)*np.identity(4)+rho*np.ones((4,4))
+Theta4 = np.linalg.inv(Sigma4)
 print('Theta4:\n', np.linalg.inv(Sigma4))
 Sigma9 = (1-rho)*np.identity(9)+rho*np.ones((9,9))
-
+Theta9 = np.linalg.inv(Sigma9)
+print('Sigma9:\n', Sigma9)
+#print('Theta9:\n', np.linalg.inv(Sigma9))
 
 Theta_test = np.linalg.inv(((1-rho)*np.identity(4)+rho*np.ones((4,4)))) + np.diag([0.1, 0.05, 0, -0.05])
 print('Theta_test', Theta_test)
@@ -524,5 +541,58 @@ print('Theta_test:\n', np.linalg.inv(Sigma_test))
 #plot_performance(Sigma0=Sigma4, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=1000, smooth=True)
 #plot_performance(Sigma0=Sigma_test, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=100, smooth=True) # patMSE goes to zero if the diagonal is not clustered
 
-print('evals', np.linalg.eigvals(Hessian(Sigma9)))
-plot_performance(Sigma0=Sigma9, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma9), n=1000, smooth=True)
+#print('evals', np.linalg.eigvals(Hessian(Sigma9)))
+#plot_performance(Sigma0=Sigma9, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(Sigma9), n=50, smooth=True) #good simulation
+#plot_performance(Sigma0=Theta4, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(Theta4), n=100, smooth=True) #penalization does not improve OLS
+
+
+def create_band_matrix(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8, third_off_diag=0.7):
+    """Creates a symmetric band matrix with specified diagonals in NumPy.
+
+    Args:
+        n: Size of the square matrix (n x n).
+        diag_val: Value for the main diagonal (default: 1.0).
+        first_off_diag: Value for the first off-diagonal (default: 0.9).
+        second_off_diag: Value for the second off-diagonal (default: 0.8).
+        third_off_diag: Value for the third off-diagonal (default: 0.7).
+
+    Returns:
+        A NumPy array representing the symmetric band matrix.
+    """
+
+    # Create a zero-filled matrix
+    matrix = np.zeros((n, n))
+
+    # Fill the diagonal
+    np.fill_diagonal(matrix, diag_val)
+
+    # Fill the first off-diagonal (above and below)
+    matrix += np.diag(np.full(n - 1, first_off_diag), k=1)  # k=1 for first off-diagonal
+    matrix += np.diag(np.full(n - 1, first_off_diag), k=-1)  # k=-1 for first off-diagonal below
+
+    # Fill the second off-diagonal (above and below)
+    if n > 2:  # Check if matrix size allows for second off-diagonal
+        matrix += np.diag(np.full(n - 2, second_off_diag), k=2)  # k=2 for second off-diagonal
+        matrix += np.diag(np.full(n - 2, second_off_diag), k=-2)  # k=-2 for second off-diagonal below
+
+    # Fill the third off-diagonal (above and below) - optional (modify if needed)
+    if n > 3:  # Check if matrix size allows for third off-diagonal
+        matrix += np.diag(np.full(n - 3, third_off_diag), k=3)  # k=3 for third off-diagonal
+        matrix += np.diag(np.full(n - 3, third_off_diag), k=-3)  # k=-3 for third off-diagonal below
+
+    return matrix
+
+
+# Example usage
+print('band9:\n', create_band_matrix(9))
+print('band4:\n', create_band_matrix(4))
+Sigma4band = create_band_matrix(4)
+print('Theta4band:\n', np.round(np.linalg.inv(Sigma4band),2))
+#plot_performance(Sigma0=np.linalg.inv(Sigma4band), x=np.linspace(0, 1.2, 10), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Sigma4band)), n=50, smooth=True) #penalization fails, SLOPE surprisingly even worse than Lasso
+Sigma4_custom = np.array([[1, 0.8, 0.8, 0.8], [0.8, 1, 0.8, 0.8], [0.8, 0.8, 1, 0.8], [0.8, 0.8, 0.8, 1]])
+print('Sigma4_custom:\n', Sigma4_custom)
+#print('Theta4_custom:\n', np.linalg.inv(Sigma4_custom))
+
+#plot_performance(Sigma0=Sigma4_custom, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4_custom), n=50, smooth=True) #good simulation
+
+
