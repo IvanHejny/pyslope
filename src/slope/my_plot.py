@@ -274,7 +274,7 @@ def reducedOLSerror(b_0, C, n=10000, sigma = 1):
         norm2_Flasso = np.linalg.norm(u_red_Flasso) ** 2
         redMSE_Flasso = redMSE_Flasso + norm2_Flasso
 
-    return  np.sqrt(MSE_OLS / n), np.sqrt(redMSE_Lasso / n), np.sqrt(redMSE_Flasso / n), np.sqrt(redMSE_SLOPE / n)
+    return np.sqrt(MSE_OLS / n), np.sqrt(redMSE_Lasso / n), np.sqrt(redMSE_Flasso / n), np.sqrt(redMSE_SLOPE / n)
 print('reducedOLSerror:', reducedOLSerror(b_0=np.array([1,0,1,0]), C=np.identity(4)))
 
 
