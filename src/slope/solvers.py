@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.linalg import norm
-from scipy import sparse
+from scipy import sparse, stats
 
 from src.slope.utils import dual_norm_slope, prox_slope, sl1_norm
 
@@ -397,8 +397,14 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
 def lin_lambdas(p):
     return np.flip(np.arange(1,p+1))/((p+1)/2)  # linear penalty sequence, normalized so that average penalty is 1
 
+def bh_lambdas(p,q=0.05):
+    randnorm = stats.norm(loc=0, scale=1)
+    lambdas = randnorm.ppf(1 - np.arange(1, p + 1) * q / (2 * p))
+    return lambdas/(np.sum(lambdas)/p) # normalized so that average penalty is 1
+print('bh_lambdas', bh_lambdas(6,0.1))
+#print('custom_lambdas', 6*np.array([2, 1.5, 1.3, 1.1, 1.05, 1])/np.sum([2, 1.5, 1.3, 1.1, 1.05, 1]))
 # Pattern matrices for SLOPE, Lasso, Fused Lasso
-
+#print(np.sum([2, 1.5, 1.3, 1.1, 1.05, 1]))
 def pattern(u):
     """
     Calculate the SLOPE pattern of a vector: rank(abs(u_i)) * sgn(u_i).

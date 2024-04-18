@@ -269,7 +269,7 @@ for n in range(200,201):
 
 def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = None):
     """
-    Calculate root mean squared error (RMSE), probability of pattern recovery, and PatternRMSE
+    Calculate root mean squared error (RMSE) E[||u_hat||^2]^{1/2}, probability of pattern recovery, and PatternRMSE
     by sampling the optimization error, which minimizes u^T*C*u/2-u^T*W+J'_{lambdas_low}(vechTheta0; u), W~N(0,Cov)
 
     Parameters:
@@ -315,7 +315,7 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
             u_hat = admm_glasso(C=C, A=A, w=W, beta0=pat_signal, lambdas=1.0)
         else:
             u_hat = pgd_gslope_Theta0_FISTA(C=C, W=W, Theta0=Theta0, lambdas=lambdas_low, t=stepsize_t, n=400)
-            #print('u_hat\n:', vech_to_mat(np.round(u_hat, 2))) # uncomment line for debugging, and understanding pattern error
+            #print('u_hat\n:', vech_to_mat(np.round(u_hat, 4))) # uncomment line for debugging, and understanding pattern error
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -328,7 +328,7 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
         # Check pattern recovery on off-diagonal entries
         pat_signal_low = split_diag_and_low(pat_signal)[1]
         u_hat_low = split_diag_and_low(u_hat)[1]
-        if all(pattern(pat_signal_low + 0.001 * np.round(u_hat_low, 2)) == pat_signal_low):
+        if all(pattern(pat_signal_low + 0.000001 * np.round(u_hat_low, 3)) == pat_signal_low):
             correct_pattern_recovery += 1
         #if all(np.sign(pattern(b_0 + 0.0001 * np.round(u_hat, 3))) == np.sign(b_0)):
         #    correct_support_recovery += 1
@@ -361,10 +361,11 @@ Theta8_block = np.linalg.inv(Sigma8_block)
 #print('lin_lambdas\n:', lin_lambdas(6))
 
 #AR_precision matrix
-#Theta4_AR = np.array([[3, -1, 0, 0], [-1, 4, -1, 0], [0, -1, 4, -1], [0, 0, -1, 3]])
-#print('Theta4_AR:\n', Theta4_AR)
+Theta4_AR = np.array([[3, -1, 0, 0], [-1, 4, -1, 0], [0, -1, 4, -1], [0, 0, -1, 3]])
+print('Theta4_AR:\n', Theta4_AR)
 #print('Sigma4_AR:\n', np.linalg.inv(Theta4_AR))
-#print('gpatternMSE_AR:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 100*np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), n=10)) # recovers pattern perfectly for large penalty
+#print('gpatternMSE_AR:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 30*np.array([2, 1.5, 1.3, 1.1, 1.05, 1]), n=10)) # recovers pattern perfectly for large penalty, non-linear penalty
+#print('gpatternMSE_AR:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 30*np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), n=10)) # much worse, but still recovers pattern for large penalty
 #print('gpatternMSE:\n', gpatternMSE(Theta0=Theta4_AR, lambdas_low = 50*np.ones(6), n=10))
 #print('gpatternMSE_id:\n', gpatternMSE(Theta0=np.identity(4), lambdas_low = 50*np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), n=10)) # recovers pattern perfectly for large penalty
 
@@ -503,7 +504,7 @@ def plot_performance(Theta0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
     plt.figure(figsize=(6, 6))
     plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
     plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
-    plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
+    #plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
     if patMSE == True:
         plt.plot(x, patMSESLOPE, label='patRMSE SLOPE', color='green', linestyle='dotted', lw=1.5)
         plt.plot(x, patMSELasso, label='patRMSE Lasso', color='blue', linestyle='dotted', lw=1.5)
@@ -531,34 +532,180 @@ def plot_performance(Theta0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=Fa
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+def plot_pattern_recovery(Theta0, x, n, lambdas_low=None, C=None, Cov=None, flasso=False, A_flasso = None, glasso=False, A_glasso = None, smooth = None):
+    """
+    Plot probability of pattern recovery for different regularization methods.
+
+    Parameters:
+    - Theta0 : numpy.ndarray
+        The precision matrix. Should be the inverse of Sigma0.
+    - x : numpy.ndarray
+        Array of interpolation values for penalty scaling factors 'alpha'.
+    - n : int
+        Number of samples.
+    - lambdas_low : numpy.ndarray, optional
+        Array of penalty values for the lower triangular part of the matrix.
+        Default is None, which generates a linear sequence of lambdas with average penalty equal to 1.
+    - C : numpy.ndarray, optional
+        Hessian matrix. Default is None, which calculates Hessian based on Theta0.
+    - Cov : numpy.ndarray, optional
+        Covariance matrix. Default is None, which calculates Cov based on Theta0.
+    - flasso : bool, optional
+        If True, include FLasso (Fused Lasso) in the plot. Default is False.
+    - A_flasso : numpy.ndarray, optional
+        Penalty matrix for FLasso. Default is None.
+    - glasso : bool, optional
+        If True, include ConFLasso (Concave Fused Lasso) in the plot. Default is False.
+    - A_glasso : numpy.ndarray, optional
+        Penalty matrix for ConFLasso. Default is None.
+    - smooth : bool, optional
+        If True, apply spline interpolation for smoother curves. Default is None.
+
+    Returns:
+    None
+
+    Note:
+    - The function plots pattern recovery for SLOPE (Sorted L-One Penalized Estimation), FLasso, and ConFLasso.
+    - The pattern recovery is plotted against the penalty scaling factor 'alpha'.
+    """
+    #Theta0 = np.linalg.inv(Sigma0)
+    Sigma0 = np.linalg.inv(Theta0)
+    vechTheta0 = mat_to_vech(Theta0)
+    vechTheta0_low = split_diag_and_low(vechTheta0)[1]
+    if C is None:
+        C = Hessian(Sigma0)  # 0.5 D^T (Theta0^{-1} \otimes Theta0^{-1}) D given by Kronecker product
+    if Cov is None:
+        Cov = Hessian(Sigma0)
+    if lambdas_low is None: # default linear sequence of lambdas, average penalty is 1
+        lambdas_low = lin_lambdas(len(vechTheta0_low))
+
+    PattSLOPE = np.empty(shape=(0,))
+    PattLasso = np.empty(shape=(0,))
+    Pattglasso = np.empty(shape=(0,))
+    Pattflasso = np.empty(shape=(0,))
+
+    for i in range(len(x)):
+        resultSLOPE = gpatternMSE(Theta0=Theta0, C=C, Cov=Cov, lambdas_low=x[i] * lambdas_low, n=n)
+        resultLasso = gpatternMSE(Theta0=Theta0, C=C, Cov=Cov, lambdas_low=x[i] * np.ones(len(vechTheta0_low)), n=n)
+        #resultLasso = gpatternMSE(Theta0=Theta0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True, A=x[i]*Acustom(a=np.ones(len(b_0)), b=np.zeros(len(b_0)-1)))
+        # using admm for lasso instead of pgd_slope_b_0_FISTA
+
+        PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
+        PattLasso = np.append(PattLasso, resultLasso[1])
+
+        if flasso == True:
+            if A_flasso is None:
+                A_flasso = Acustom(a=np.ones(len(vechTheta0_low)), b=np.ones(len(vechTheta0_low) - 1))
+            resultflasso = gpatternMSE(Theta0=Theta0, C=C, Cov=Cov, lambdas_low=x[i] * lambdas_low, n=n, genlasso=True, A=x[i]*A_flasso)
+            Pattflasso = np.append(Pattflasso, resultflasso[1])
+
+        if glasso == True:
+            if A_glasso is None:
+                A_glasso = Acustom(a=np.ones(len(vechTheta0_low)), b=np.ones(len(vechTheta0_low) - 1))
+            resultglasso = gpatternMSE(Theta0=Theta0, C=C, Cov=Cov, lambdas_low=x[i] * lambdas_low, n=n, genlasso=True, A=x[i] * A_glasso)
+            Pattglasso = np.append(Pattglasso, resultglasso[1])
+            #  Supportglasso = np.append(Supportglasso, resultglasso[2])
+    if smooth == True:
+        #  Spline interpolation for smoother curve
+        x_smooth = np.linspace(x.min(), x.max(), 20 * (len(x) - 1) + 1)
+        spl2 = PchipInterpolator(x, PattSLOPE)  #
+        PattSLOPE = spl2(x_smooth)
+
+        if flasso == True:
+            spl5 = PchipInterpolator(x, Pattflasso)
+            Pattflasso = spl5(x_smooth)
+        if glasso == True:
+            spl7 = PchipInterpolator(x, Pattglasso)
+            Pattglasso = spl7(x_smooth)
+
+        x = x_smooth
+    # Plot the functions on the same graph
+    plt.figure(figsize=(6, 6))
+    plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
+    if flasso == True:
+        plt.plot(x, Pattflasso, label='recovery FLasso', color='orange', linestyle='dashed', lw=1.5)
+    if glasso == True:
+        plt.plot(x, Pattglasso, label='recovery ConFLasso', color='purple', linestyle='dashed', lw=1.5)
+    #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
+    #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
+    #plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
+
+    # Increase the size of x-axis and y-axis tick labels
+    plt.xticks(fontsize=14)  # font size for x-axis tick labels
+    plt.yticks(fontsize=14)  # font size for y-axis tick labels
+    plt.xlabel(r'$\alpha$', fontsize=16)  # penalty scaling
+
+    plt.legend(fontsize=14)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
 
 rho = 0.8
 
-Sigma4 = (1-rho)*np.identity(4)+rho*np.ones((4,4))
+Sigma4 = (1-rho)*np.identity(4)+rho*np.ones((4, 4))
 Theta4 = np.linalg.inv(Sigma4)
-#print('Theta4:\n', np.linalg.inv(Sigma4))
-Sigma9 = (1-rho)*np.identity(9)+rho*np.ones((9,9))
+Sigma9 = (1-rho)*np.identity(9)+rho*np.ones((9, 9))
 Theta9 = np.linalg.inv(Sigma9)
-#print('Sigma9:\n', Sigma9)
+#print('Theta4:\n', Theta4)
+#print('Hessian(Sigma4):\n', Hessian(Sigma4))
+#print('evals4', np.linalg.eigvals(Hessian(Sigma4)))
+#print('evals9', np.linalg.eigvals(Hessian(Sigma9)))
+#print('lin_lambdas45:\n', lin_lambdas(9*8/2))
 
-#Sigma_test = (1-rho)*np.identity(4)+rho*np.ones((4,4)))) + np.diag([0.1, 0.05, 0, -0.05])
-#Theta_test = np.linalg.inv(Sigma_test)
-#print('Sigma_test:\n', Sigma_test)
-#print('Theta_test:\n', Theta_test)
-#plot_performance(Theta0=Theta_test, x=np.linspace(0, 0.6, 10), patMSE=True, Cov=1**2*Hessian(Sigma4), n=100, smooth=True) # patMSE goes to zero if the diagonal is not clustered
+
+
 
 #np.set_printoptions(linewidth=np.inf)
 np.set_printoptions(threshold=np.inf)
 
-#print('Hessian(Sigma9):\n', Hessian(Sigma9))
-#print('evals9', np.linalg.eigvals(Hessian(Sigma9)))
-#print('evals4', np.linalg.eigvals(Hessian(Sigma4)))
-print('lin_lambdas45:\n', lin_lambdas(9*8/2))
-#plot_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta9)), n=50, smooth=True) #good simulation
-#plot_performance(Theta0=Theta4, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta4)), n=100, smooth=True) # good
-plot_performance(Theta0=Theta8_block, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta8_block)), n=100, smooth=True)
 
+
+# Testing if patMSE goes to zero if the diagonal is not clustered
+#rho = 0.8
+#Sigma_test = (1-rho)*np.identity(4)+rho*np.ones((4,4))
+#Theta_test = np.linalg.inv(Sigma_test) + np.diag([0.1, 0.05, 0, -0.05])
+#print('Sigma_test:\n', Sigma_test)
+#print('Theta_test:\n', Theta_test)
+#plot_performance(Theta0=Theta_test, x=np.linspace(0, 1, 10), patMSE=True, Cov=1 ** 2 * Hessian(Sigma4), n=50, smooth=True)
+
+# patMSE for the compound symmeteric matrix should go to zero if the diagonal is not clustered
+
+
+
+# PERFORMANCE PLOTS
+# Here we seperately plot rmse performance and pattern recovery for SLOPE and Lasso
+
+# Compound symmetric precision matrix
+# print('Theta9:\n', Theta9)
+plot_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta9)), n=50, smooth=True) #good simulation
+#plot_performance(Theta0=Theta4, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta4)), n=100, smooth=True) # good
+
+
+# Block diagonal precision matrix
+# print('Theta8_block:\n', Theta8_block)
+# plot_performance(Theta0=Theta8_block, x=np.linspace(0, 0.6, 5), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Theta8_block)), n=100, smooth=True)
+
+
+
+#plot_pattern_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), Cov=1**2*Hessian(np.linalg.inv(Theta9)), n=50, smooth=True)
+
+
+# AR precision matrix
+#plot_pattern_performance(Theta0=Theta4_AR, lambdas_low=np.array([2, 1.8, 1.6, 1.4, 1.2, 1]), x=np.linspace(0, 200, 10), n=100, smooth=True)
+#plot_pattern_performance(Theta0=Theta4_AR, lambdas_low=np.array([2, 1.5, 1.3, 1.1, 1.05, 1]), x=np.linspace(0, 200, 10), n=100, smooth=True)
+print('bh_lambdas_q=0.1\n:',bh_lambdas(6, 0.1), '\n', 'bh_lambdas_q=0.2\n:', bh_lambdas(6, 0.2), '\n', 'bh_lambdas_q=0.5\n:', bh_lambdas(6, 0.6))
+
+plot_pattern_recovery(Theta0=Theta4_AR, lambdas_low=bh_lambdas(6, 0.6), x=np.linspace(0, 100, 5), n=30, smooth=True)
+
+# Testing if patMSE goes to zero if the diagonal is not clustered
+rho = 0.8
+Sigma_test = (1-rho)*np.identity(4)+rho*np.ones((4,4))
+Theta_test = np.linalg.inv(Sigma_test) + np.diag([0.1, 0.05, 0, -0.05])
+#print('Sigma_test:\n', Sigma_test)
+#print('Theta_test:\n', Theta_test)
+plot_performance(Theta0=Theta_test, x=np.linspace(0, 1, 10), patMSE=True, Cov=1 ** 2 * Hessian(Sigma4), n=50, smooth=True)
+# patMSE for the compound symmteric matrix should go to zero if the diagonal is not clustered
 
 
 def create_band_matrix(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8, third_off_diag=0.7):
