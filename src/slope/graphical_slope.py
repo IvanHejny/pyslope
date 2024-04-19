@@ -173,30 +173,40 @@ def pgd_gslope_Theta0_ISTA(C, W, Theta0, lambdas, n, t=None):
         prox_step = join_diag_and_low(prox_step_diag, prox_step_low)
     return(prox_step)
 
-def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas, n=None, t=None, tol=1e-3, max_iter=10000):
-    """Minimizes: 1/2 u^T*C*u-u^T*W+J'_{lambda}(vechTheta0; u),
-     where J'_{lambda}(b^0; u) is the directional SLOPE derivative
-       Parameters
-       ----------
-       C: np.array
-           covariance matrix of the data
-       W: np.array
-           p-dimensional vector, in our paper it arises from normal N(0, \sigma^2 * C ),
-           where \sigma^2 is variance of the noise
-       Theta0: np.array
-           pattern vector of the true signal
-       lambdas : np.array
-           vector of regularization weights
-       t: np.float
-           step size
-       n: integer
-           number of steps before termination
+def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas_low, n=None, t=None, tol=1e-4, max_iter=2000):
+    """
+    Minimizes the objective function:
+        1/2 u^T*C*u - u^T*W + J'_{lambdas_low}(vechTheta0; u),
 
-       Returns
-       -------
-       array
-           the unique solution to the minimization problem, given by a vector u.
-       """
+    where J'_{lambdas_low}(b^0; u) is the directional SLOPE derivative,
+    lambdas_low penalizes only the lower triangular part of the precision matrix.
+
+    Parameters
+    ----------
+    C : np.array
+        Covariance matrix of the data.
+    W : np.array
+        p-dimensional vector. In our paper, it arises from a normal distribution
+        N(0, \sigma^2 * C), where \sigma^2 is the variance of the noise.
+    Theta0 : np.array
+        Pattern vector of the true signal.
+    lambdas_low : np.array
+        Vector of regularization weights.
+    t : np.float, optional
+        Step size. Default is None.
+    n : integer, optional
+        Number of steps before termination. Default is None.
+    tol : float, optional
+        Tolerance level for termination based on the norm between consecutive iterates.
+        Default is 1e-6.
+    max_iter : int, optional
+        Maximum number of iterations. Default is 1000.
+
+    Returns
+    -------
+    array
+        The unique solution to the minimization problem, given by a vector u.
+    """
     vechTheta0 = pattern(np.round(mat_to_vech(Theta0),3))
     u_k = np.zeros(len(vechTheta0))  # initial point
     u_kmin2 = u_k  # Lagged iterate u_{k-2}
@@ -208,62 +218,71 @@ def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas, n=None, t=None, tol=1e-3, max
         t=np.float32(np.real(t))
     stepsize_t = t #np.float32(t)
     #u_k=np.zeros(len(vechTheta0))
+    if n is None:
+        max_iter = max_iter
+    else:
+        max_iter = n
     for k in range(2, max_iter):
         v = u_kmin1 + ((k-2)/(k+1))*(u_kmin1-u_kmin2)
         grad_step = v - stepsize_t * (C @ v - W)
         grad_step_diag = split_diag_and_low(grad_step)[0]
         grad_step_low = split_diag_and_low(grad_step)[1]
 
-        prox_step_low = prox_slope_b_0(split_diag_and_low(vechTheta0)[1], grad_step_low, lambdas * stepsize_t) #prox step only on the lower diagonal entries
+        prox_step_low = prox_slope_b_0(split_diag_and_low(vechTheta0)[1], grad_step_low, lambdas_low * stepsize_t) #prox step only on the lower diagonal entries
         prox_step_diag = grad_step_diag
         u_k = join_diag_and_low(prox_step_diag, prox_step_low)
         u_kmin2 = u_kmin1
         u_kmin1 = u_k
-        if n == None:
-            norm_diff = np.linalg.norm(u_kmin1 - u_kmin2)
+        if n is None:
+            p = Theta0.shape[0]
+            norm_diff = np.linalg.norm(u_kmin1 - u_kmin2) / p
             if norm_diff < tol:
                 break
-    print('final_iter:', k) # uncomment line for final iterate
+            elif k == max_iter - 1:
+                print('Warning: Maximum number of iterations', max_iter, ' reached. Convergence is slow. The stepsize 1/max(eigenvalues of C) = ', stepsize_t ,' might be too small. Also, Theta0 might be close to singular.')
+    print('final_iter:', k)  # uncomment line for final iterate
     return u_k
 
 
 
-#convergence speed issues, number of iterates required is in the order of hundreds
-#'''
-d=2
-Theta4c = np.array([[d, 1.2, 1.2, 0], [1.2, d, 1.2, 0], [1.2, 1.2, d, 0], [0, 0, 0, d]]) #increase the diagonal entries to 4 increases stepsize from 3.75 to 8.96
-rho = 0.2
+#convergence speed issues, number of iterates required might be in order of hundreds if 1/max(eigenvalues of C) is small < 0.2, or if Theta0 is close to singular
+'''
+#d=2
+#Theta4c = np.array([[d, 1.2, 1.2, 0], [1.2, d, 1.2, 0], [1.2, 1.2, d, 0], [0, 0, 0, d]]) # increasing diagonal d from 1.5, to 2, to 3, to 4 increases stepsize from 0.107, to 0.75 to 3.75 to 8.96, and final_iter with tol=1e-4, decrese 333, 141 to 77 to 51.
+rho = 0.8
 Sigma4c = np.array([[1, rho, rho, rho],[rho, 1, rho, rho],[rho, rho, 1, rho],[rho, rho, rho, 1]])
 Theta4c = np.linalg.inv(Sigma4c)
 
 C_tilde = Hessian(np.linalg.inv(Theta4c))
 lambdas_low = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0]) / 3.5
 print('evals:\n', np.linalg.eigvals(C_tilde))
-print('1/max(eval):\n', 1/max(np.linalg.eigvals(C_tilde))) # we want stepsize as large as possible, i.e. max(eval(Hessian)) as small as possible, i.e. 'precision Theta0 as 'large' as possible'
+print('1/max(eval):\n', 1/max(np.linalg.eigvals(C_tilde)))
+# we want stepsize as large as possible, i.e. max(eval(Hessian)) as small as possible, i.e. 'precision Theta0 as 'large' as possible on the diagonal'
 
 print('Theta4c:\n', Theta4c)
 W = np.array([1, 0.5, 0.3, 1, 0.85, -0.6, 1.1, 0.2, -0.4, 0.1])
 #est_truth_gslp = vech_to_mat(pgd_slope_b_0_FISTA(C=C_tilde, W=W, b_0=mat_to_vech(Theta4c), lambdas=8*0.1 * np.array([10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0])/55, t=0.2, n=1000))
 #print('est_truth_gslp:\n', est_truth_gslp)
 
-terminated_fista = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas= 8 * 0.1 * lambdas_low))
+est_truth_fista4 = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas_low=8 * 0.1 * lambdas_low, n=10000))
+print('est_truth_low_fista:\n', est_truth_fista4)
+terminated_fista = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas_low=8 * 0.1 * lambdas_low))
 print('terminated_fista:\n', terminated_fista)
+print('error:\n', terminated_fista - est_truth_fista4)
 
-est_truth_low_ista = vech_to_mat(pgd_gslope_Theta0_ISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas=8 * 0.1 * lambdas_low, n=1000))
-est_truth_low_fista = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas=8 * 0.1 * lambdas_low, n=1000))
-print('est_truth_low_ista:\n', est_truth_low_ista)
-print('est_truth_low_fista:\n', est_truth_low_fista)
-#for i in range(100, 105):
-#   Fista_t0.2 = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas=8 * 0.1 * lambdas_low, t=0.2, n=i))
-#   print('Fista:\n', Fista - est_truth_low_ista)
-for i in range(100, 105):
-   Fista = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas=8 * 0.1 * lambdas_low, n=i))
-   print('Fista_error:\n', Fista - est_truth_low_fista)
-#for i in range(10, 50):
-#   Fista_n = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas=8 * 0.1 * lambdas_low, n=i))
-#   Fista_n1 = vech_to_mat(pgd_gslope_Theta0_FISTA(C=C_tilde, W=W, Theta0=Theta4c, lambdas=8 * 0.1 * lambdas_low, n=i+1))
-#   print('Cauchy_difference_n:\n', Fista_n - Fista_n1)
-#'''
+
+Sigma8_block = np.block([[Sigma4c, np.zeros((4, 4))], [np.zeros((4, 4)), Sigma4c]])
+Theta8_block = np.linalg.inv(Sigma8_block)
+print('Theta8_block:\n', np.round(Theta8_block,2))
+W = np.random.multivariate_normal(np.zeros(36), np.identity(36))
+est_truth_fista_block8 = vech_to_mat(pgd_gslope_Theta0_FISTA(C=Hessian(np.linalg.inv(Theta8_block)), W=W, Theta0=Theta8_block, lambdas_low=8 * 0.1 * lin_lambdas(8 * 7 / 2), n=10000))
+terminated_fista_block8 = vech_to_mat(pgd_gslope_Theta0_FISTA(C=Hessian(np.linalg.inv(Theta8_block)), W=W, Theta0=Theta8_block, lambdas_low=8 * 0.1 * lin_lambdas(8 * 7 / 2)))
+print('est_truth_fista_block8:\n', np.round(est_truth_fista_block8, 4))
+print('terminated_fista_block8:\n', np.round(terminated_fista_block8, 4))
+print('error_block8:\n', np.round(terminated_fista_block8 - est_truth_fista_block8, 4))
+
+'''
+
 
 '''
 for n in range(200,201):
@@ -319,7 +338,7 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
     #correct_support_recovery = 0
     MSE = 0
     patMSE = 0
-    stepsize_t = 1/max(np.linalg.eigvals(C))  # stepsize <= 1/max eigenvalue of C;
+    #stepsize_t = 1/max(np.linalg.eigvals(C))  # stepsize <= 1/max eigenvalue of C;
     # (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W));
     # gives O(1/n^2) convergence;
 
@@ -333,7 +352,7 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
                 A = Acustom(a=np.ones(len(vechTheta0)), b=np.ones(len(vechTheta0)-1))
             u_hat = admm_glasso(C=C, A=A, w=W, beta0=pat_signal, lambdas=1.0)
         else:
-            u_hat = pgd_gslope_Theta0_FISTA(C=C, W=W, Theta0=Theta0, lambdas=lambdas_low, t=stepsize_t, n=400)
+            u_hat = pgd_gslope_Theta0_FISTA(C=C, W=W, Theta0=Theta0, lambdas_low=lambdas_low, tol=1e-4, max_iter=2000) # before n was 400, now its adaptive to the stopping criterium
             #print('u_hat\n:', vech_to_mat(np.round(u_hat, 4))) # uncomment line for debugging, and understanding pattern error
 
         # Calculate MSE
@@ -342,7 +361,6 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
         # Calculate pattern error: MSE = patMSE + restMSE
         pat_norm2 = np.linalg.norm((np.identity(len(vechTheta0))-pat_proj) @ u_hat) ** 2
         patMSE += pat_norm2  # patMSE is the Euclidean distance of u_hat from the pattern space of vechTheta0
-
 
         # Check pattern recovery on off-diagonal entries
         pat_signal_low = split_diag_and_low(pat_signal)[1]
@@ -365,20 +383,20 @@ def gpatternMSE(Theta0, lambdas_low, n, C=None, Cov=None, genlasso=False, A = No
 # Here we test asymptotic error, and asymptotic pattern recovery of graphical SLOPE and Lasso for various precision matrices
 
 # Compound precision matrix
-rho = 0.2
+rho = 0.4
 Sigma4_compound = np.array([[1, rho, rho, rho],[rho, 1, rho, rho],[rho, rho, 1, rho],[rho, rho, rho, 1]])
 Theta4_compound = np.linalg.inv(Sigma4_compound)
-print('Theta4_compound:\n', Theta4_compound)
-print('stepsize=1/max(eval):\n', np.linalg.eigvals(Hessian(Sigma4_compound)), 1/max(np.linalg.eigvals(Hessian(Sigma4_compound))), 1/max(np.linalg.eigvals(Hessian(0.5*Sigma4_compound))))
+#print('Theta4_compound:\n', Theta4_compound)
+#print('stepsize=1/max(eval):\n', np.linalg.eigvals(Hessian(Sigma4_compound)), 1/max(np.linalg.eigvals(Hessian(Sigma4_compound))))
 #print('gpatternMSE_compound:\n', gpatternMSE(Theta0=Theta4_compound, lambdas_low = 0.5*lin_lambdas(6), n=10)) # recovers pattern in compound symmetric perfectly for large penalty
 
 #Block compound precision matrix
 Sigma8_block = np.block([[Sigma4_compound, np.zeros((4, 4))], [np.zeros((4, 4)), Sigma4_compound]])
 Theta8_block = np.linalg.inv(Sigma8_block)
-print('Theta8_block:\n', np.round(Theta8_block,2))
+#print('Theta8_block:\n', np.round(Theta8_block,2))
 #print('gpatternMSE_block:\n', gpatternMSE(Theta0=Theta8_block, lambdas_low = 0.5*lin_lambdas(8*7/2), n=10))
 #print('gpatternMSE_block:\n', gpatternMSE(Theta0=Theta8_block, lambdas_low = 1*lin_lambdas(8*7/2), n=10))
-#print('gpatternMSE_block:\n', gpatternMSE(Theta0=Theta8_block, lambdas_low = 2*lin_lambdas(8*7/2), n=10)) #perfect pattern recovery
+#print('gpatternMSE_block:\n', gpatternMSE(Theta0=Theta8_block, lambdas_low = 2*lin_lambdas(8*7/2), n=10))
 
 #Band precision matrix
 Theta4_band = np.array([[1, 0.9, 0.8, 0.7], [0.9, 1, 0.9, 0.8], [0.8, 0.9, 1, 0.9], [0.7, 0.8, 0.9, 1]])
@@ -671,6 +689,11 @@ Sigma4 = (1-rho)*np.identity(4)+rho*np.ones((4, 4))
 Theta4 = np.linalg.inv(Sigma4)
 Sigma9 = (1-rho)*np.identity(9)+rho*np.ones((9, 9))
 Theta9 = np.linalg.inv(Sigma9)
+
+
+Sigma8_block = np.block([[Sigma4, np.zeros((4, 4))], [np.zeros((4, 4)), Sigma4]])
+Theta8_block = np.linalg.inv(Sigma8_block)
+print('Theta8_block:\n', np.round(Theta8_block,2))
 #print('Theta4:\n', Theta4)
 #print('Hessian(Sigma4):\n', Hessian(Sigma4))
 #print('evals4', np.linalg.eigvals(Hessian(Sigma4)))
@@ -695,7 +718,9 @@ np.set_printoptions(threshold=np.inf)
 #plot_performance(Theta0=Theta4, lambdas_low=lin_lambdas(4*3/2), x=np.linspace(0, 0.6, 5), patMSE=True, n=100, smooth=True) # good
 #plot_performance(Theta0=Theta4, lambdas_low=bh_lambdas(6, 0.1), x=np.linspace(0, 0.6, 5), patMSE=True, n=100, smooth=True) # not much difference between SLOPE and LASSO
 print('Theta9:\n', np.round(Theta9, 2))
-#plot_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, n=50, smooth=True) #SLOPE beats Lasso
+print('eval9:\n', 1/max(np.linalg.eigvals(Hessian(Sigma9))))
+#plot_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # rho=0.1 SLOPE beats Lasso
+#plot_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, n=50, smooth=True) # rho=0.8 SLOPE beats Lasso
 
 
 
@@ -703,8 +728,9 @@ print('Theta9:\n', np.round(Theta9, 2))
 # Here the BH_sequence is superior to the linear sequence in terms of error
 print('Theta8_block:\n', np.round(Theta8_block, 2))
 #plot_performance(Theta0=Theta8_block, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, n=100, smooth=True) # Lasso beats SLOPE
-#plot_performance(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.2), x=np.linspace(0, 0.6, 5), patMSE=True, n=200, smooth=True) # SLOPE beats Lasso
-
+plot_performance(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.2), x=np.linspace(0, 0.6, 5), patMSE=True, n=20, smooth=True) # rho 0.8 SLOPE beats Lasso
+#plot_performance(Theta0=Theta8_block, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 2, 5), patMSE=True, n=200, smooth=True) # rho 0.1
+#plot_performance(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.5), x=np.linspace(0, 2, 5), patMSE=True, n=200, smooth=True) # rho 0.1
 #plot_pattern_recovery(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.2), x=np.linspace(0, 5, 5), Cov=0.2**2*Hessian(np.linalg.inv(Theta8_block)), n=100, smooth=True) # does not recover the pattern
 
 
