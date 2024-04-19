@@ -380,6 +380,7 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
        array
            the unique solution to the minimization problem, given by a vector u.
        """
+    b_0 = pattern(b_0)
     u_0 = np.zeros(len(b_0))
     u_kmin2 = u_0
     u_kmin1 = u_0
@@ -394,17 +395,7 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
         u_kmin1 = u_k
     return (u_k)
 
-def lin_lambdas(p):
-    return np.flip(np.arange(1,p+1))/((p+1)/2)  # linear penalty sequence, normalized so that average penalty is 1
 
-def bh_lambdas(p,q=0.05):
-    randnorm = stats.norm(loc=0, scale=1)
-    lambdas = randnorm.ppf(1 - np.arange(1, p + 1) * q / (2 * p))
-    return lambdas/(np.sum(lambdas)/p) # normalized so that average penalty is 1
-print('bh_lambdas', bh_lambdas(6,0.1))
-#print('custom_lambdas', 6*np.array([2, 1.5, 1.3, 1.1, 1.05, 1])/np.sum([2, 1.5, 1.3, 1.1, 1.05, 1]))
-# Pattern matrices for SLOPE, Lasso, Fused Lasso
-#print(np.sum([2, 1.5, 1.3, 1.1, 1.05, 1]))
 def pattern(u):
     """
     Calculate the SLOPE pattern of a vector: rank(abs(u_i)) * sgn(u_i).
@@ -433,7 +424,7 @@ def pattern(u):
     return result.astype(int)
 
 def pattern_matrix(vector):
-  """Creates a pattern matrix representing non-zero clusters in the input vector.
+  """Creates a (SLOPE) pattern matrix representing non-zero clusters in the input vector.
 
   Args:
       vector: A NumPy vector.
@@ -453,7 +444,6 @@ def pattern_matrix(vector):
     # pattern_matrix[i, pattern_matrix[i] == 1] = np.arange(1, count +1)  # Set unique markers for duplicates
 
   return  (pattern_matrix @ sign_matrix).T  # .astype(int) convert to integer type
-
 
 #print('pattern matrix:\n', pattern_matrix(np.array([0, 2, 0, -2, 2, 1, 1])))
 
@@ -559,3 +549,75 @@ def proj_onto_pattern_space(vector):
     U = pattern_matrix(vector)
     return U @ np.linalg.inv(U.T @ U) @ U.T
 
+
+def lin_lambdas(p):
+    """
+    Generate linear penalty sequence.
+
+    This function generates a linear penalty sequence for regularization
+    purposes, normalized such that the average penalty is 1.
+
+    Parameters:
+        p (int): The length of the penalty sequence.
+
+    Returns:
+        array_like: Array of linearly decreasing penalty values.
+    """
+    return np.flip(np.arange(1, p + 1)) / ((p + 1) / 2)
+
+
+def bh_lambdas(p, q=0.05):
+    """
+    Generate Benjamini-Hochberg (BH) penalty sequence.
+
+    This function generates a penalty sequence following the Benjamini-Hochberg
+    (BH) method, normalized such that the average penalty is 1.
+
+    Parameters:
+        p (int): The length of the penalty sequence.
+        q (float, optional): The false discovery rate (FDR) control level.
+
+    Returns:
+        array_like: Array of penalty values following the BH method.
+    """
+    randnorm = stats.norm(loc=0, scale=1)
+    lambdas = randnorm.ppf(1 - np.arange(1, p + 1) * q / (2 * p))
+    return lambdas / (np.sum(lambdas) / p)
+
+#print('bh_lambdas', bh_lambdas(6,0.1))
+
+def create_band_matrix(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8, third_off_diag=0.7):
+    """Creates a symmetric band matrix with specified diagonals in NumPy.
+
+    Args:
+        n: Size of the square matrix (n x n).
+        diag_val: Value for the main diagonal (default: 1.0).
+        first_off_diag: Value for the first off-diagonal (default: 0.9).
+        second_off_diag: Value for the second off-diagonal (default: 0.8).
+        third_off_diag: Value for the third off-diagonal (default: 0.7).
+
+    Returns:
+        A NumPy array representing the symmetric band matrix.
+    """
+
+    # Create a zero-filled matrix
+    matrix = np.zeros((n, n))
+
+    # Fill the diagonal
+    np.fill_diagonal(matrix, diag_val)
+
+    # Fill the first off-diagonal (above and below)
+    matrix += np.diag(np.full(n - 1, first_off_diag), k=1)  # k=1 for first off-diagonal
+    matrix += np.diag(np.full(n - 1, first_off_diag), k=-1)  # k=-1 for first off-diagonal below
+
+    # Fill the second off-diagonal (above and below)
+    if n > 2:  # Check if matrix size allows for second off-diagonal
+        matrix += np.diag(np.full(n - 2, second_off_diag), k=2)  # k=2 for second off-diagonal
+        matrix += np.diag(np.full(n - 2, second_off_diag), k=-2)  # k=-2 for second off-diagonal below
+
+    # Fill the third off-diagonal (above and below) - optional (modify if needed)
+    if n > 3:  # Check if matrix size allows for third off-diagonal
+        matrix += np.diag(np.full(n - 3, third_off_diag), k=3)  # k=3 for third off-diagonal
+        matrix += np.diag(np.full(n - 3, third_off_diag), k=-3)  # k=-3 for third off-diagonal below
+
+    return matrix

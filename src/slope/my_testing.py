@@ -420,3 +420,30 @@ b_0_partition = y_partition_by_b_0(b_0_test3, b_0_test3)
 #print(y_partition_by_b_0(b_0_test3, y_test3))
 '''
 
+#some graphical tests
+'''
+# Testing if patMSE goes to zero if the diagonal is not clustered
+#rho = 0.8
+#Sigma_test = (1-rho)*np.identity(4)+rho*np.ones((4,4))
+#Theta_test = np.linalg.inv(Sigma_test) + np.diag([0.1, 0.05, 0, -0.05])
+#print('Sigma_test:\n', Sigma_test)
+#print('Theta_test:\n', Theta_test)
+# plot_performance(Theta0=Theta_test, x=np.linspace(0, 1, 10), patMSE=True, Cov=1 ** 2 * Hessian(Sigma4), n=50, smooth=True)
+# Because of perfect off-diagonal pattern recovery, patMSE for the compound symmeteric matrix should go to zero if the diagonal is not clustered
+
+# Band precision matrix
+#Theta4band = create_band_matrix(4)
+#print('Theta4band:\n', np.round(Theta4band,2))
+#plot_performance(Sigma0=np.linalg.inv(Sigma4band), x=np.linspace(0, 1.2, 10), patMSE=True, Cov=1**2*Hessian(np.linalg.inv(Sigma4band)), n=50, smooth=True) #penalization fails, SLOPE surprisingly even worse than Lasso
+
+
+# Testing if patMSE goes to zero if the diagonal is not clustered
+#rho = 0.8
+#Sigma_test = (1-rho)*np.identity(4)+rho*np.ones((4,4))
+#Theta_test = np.linalg.inv(Sigma_test) + np.diag([0.1, 0.05, 0, -0.05])
+#print('Sigma_test:\n', Sigma_test)
+#print('Theta_test:\n', Theta_test)
+#plot_performance(Theta0=Theta_test, x=np.linspace(0, 1, 10), patMSE=True, Cov=1 ** 2 * Hessian(Sigma4), n=50, smooth=True)
+
+# patMSE for the compound symmeteric matrix should go to zero if the diagonal is not clustered
+'''
