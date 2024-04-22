@@ -586,7 +586,10 @@ def bh_lambdas(p, q=0.05):
 
 #print('bh_lambdas', bh_lambdas(6,0.1))
 
-def create_band_matrix(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8, third_off_diag=0.7):
+
+def comp_sym_corr(rho, p):
+    return (1-rho)*np.identity(p)+rho*np.ones((p, p))
+def band_mat(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8, third_off_diag=0.7):
     """Creates a symmetric band matrix with specified diagonals in NumPy.
 
     Args:
