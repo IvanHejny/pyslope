@@ -109,6 +109,11 @@ def Acustom(a , b): # a: sparsity penalty, b: clustering penalty
         normalization = np.sum(A)
     return A
 
+def Aconcave(p, curvature=0.05, cluster_scaling=1):
+    cluster_penalty = cluster_scaling * np.array([1 + curvature * i * (p - i) for i in range(1, p)])
+    return Acustom(a=np.ones(p), b=cluster_penalty)
+
+
 #print('Acustom:\n', Acustom(a= [1,2,3], b= [5,1]))
 
 

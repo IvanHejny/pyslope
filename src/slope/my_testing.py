@@ -2,78 +2,22 @@ from src.slope.solvers import*
 from admm_glasso import*
 
 #ADMM_GLASSO
-
 '''
-p = 2
-AFL2 = np.zeros((2 * p - 1, p))
-for i in range(p - 1):
-    AFL2[i][i] = 1
-    AFL2[i][i + 1] = -1 #clustering penalty
-for i in range(p-1, 2*p -1):
-    AFL2[i][i - (p - 1)] = 1.7 #sparsity penalty
-#print('AFL\n:', AFL2)
-
-p = 9
-A = np.zeros((p, p))
-for i in range(p - 1):
-    A[i][i] = 1
-    A[i][i + 1] = -1 #enables clustering
-A[p - 1][0] = 1 #enables sparsity
-#w = np.array([1, 1.1, 0.9, 2, 1, -2, 0, 1, 1]) #just a fixed arbitrary vector
-
-
-AFL9 = np.zeros((2 * p - 1, p))
-for i in range(p - 1):
-    AFL9[i][i] = 1
-    AFL9[i][i + 1] = -1 #clustering penalty
-for i in range(p-1, 2*p -1):
-    AFL9[i][i - (p - 1)] = 1 #sparsity penalty
-#print('AFL\n:', AFL)
-
-p=7
-Amon = np.zeros((2 * p - 1, p))
-for i in range(p - 1):
-    Amon[i][i] = 1
-    Amon[i][i + 1] = -1  # clustering penalty
-for i in range(p - 1, 2 * p - 1):
-    Amon[i][i - (p - 1)] = 1+0.1*(i-(p-1)+1)  # sparsity penalty
-print('Amon:\n', Amon)
-'''
-
-
-# signal vector betas
-beta02 = np.array([0, 1])  # recovery for tuned AFL a>>1
-beta09 = np.array([0, 0, 0, 1, 1, 1, 2, 2, 2])  # recovery seemingly impossible irrespective of tuning AFL
-# the error in pattern always occurs in the middle cluster next to zero cluster, never in the last cluster
-beta03 = np.array([1, 1, 0])  #
-beta030 = np.array([0, 0, 1])  # recovery for tuned AFL a>>1
-beta04 = np.array([0, 0, 1, 1])  # recovery for tuned AFL a>>1
-beta043 = np.array([0, 1, 1, 2])  # fails to recover the middle cluster
-beta07 = np.array([2, 2, -3, -3, 1, 1, 1])  # fails to recover the two middle clusters, but recovers the 0 and the last
-
 # printing different quantities appearing in the ADMM algorithm
-my_beta0 = beta03
-my_A = AFLmon(3,0.1) #AFLmon(4, 0.1) # AFL(4,1.3) # AFL(7,1)
 
 #print('my_beta0:', my_beta0)
 #print('my_A:\n', my_A)
-E_1 = np.diag(np.sign(my_A @ my_beta0))  # sgn(A*beta0) mxm matrix
+#E_1 = np.diag(np.sign(my_A @ my_beta0))  # sgn(A*beta0) mxm matrix
 #print('E_1:\n', E_1)
-ind = np.where(np.diag(E_1) == 0)[0]
+#ind = np.where(np.diag(E_1) == 0)[0]
 #print('ind:', ind)
-F_0 = my_A[ind, :]
+#F_0 = my_A[ind, :]
 #print('F_0:\n', F_0)
 #print('colsum:\n', E_1 @ my_A, np.ones(my_A.shape[0]).T @ E_1 @ my_A)
-
+'''
 # covariance matrix
-alpha = 0.7
-C2 = np.array([[1, alpha], [alpha, 1]])
-C9_comp = alpha * np.ones(9) + (1-alpha) * np.identity(9)  # compound symmetric covariance matrix
 
-c_block = (1 - alpha) * np.identity(3) + alpha * np.ones((3, 3))
-C9_block = np.block([[c_block, np.zeros((3, 3)), np.zeros((3, 3))], # block diagonal with 3 compound blocks 3x3
-                     [np.zeros((3,3)), c_block, np.zeros((3, 3))],
-                     [np.zeros((3,3)), np.zeros((3,3)), c_block]])
+
 
 def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic error from the glasso
     p = len(beta0)
@@ -84,8 +28,11 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic e
         print('glasso_sol:', pattern(np.round(glasso_sample, 2)))
         #print('glasso_sol:', np.round(glasso_sample, 2))
 
+#alpha = 0.7
+#C2 = np.array([[1, alpha], [alpha, 1]])
 # print(glasso_sampler(C2, AFL(2, a=1.5), beta02, 40))
 # print(glasso_sampler(np.identity(3), AFL(3, a=1.5), beta030, 40))
+#C9_comp = alpha * np.ones(9) + (1-alpha) * np.identity(9)  # compound symmetric covariance matrix
 # print(glasso_sampler(C9_comp, AFL(9), beta09, 40))
 # print(glasso_sampler(np.identity(7), AFL(7, a=1.2), beta07, 40))
 #print(glasso_sampler(np.identity(4), AFLmon(4, b=0.1), beta043, 40))
@@ -96,6 +43,8 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic e
 #print(glasso_sampler(C9_block, AFLmon(9, 0.1), beta09, 40)) # perfect pattern recovery by AFLmon
 #print(glasso_sampler(C9_block, AFLmon(9, 0.1), np.array([1,1,1,0,0,0,2,2,2]), 40)) #reshuffled beta0, no issue
 
+#glasso_sampler test
+'''
 beta2 = np.array([1, 0])
 beta3 = np.array([1, 2, 2])  # for p=3, all patterns are recovered by AFLmon(3, a=1.1)
 beta3bug = np.array([1, 20, 20])
@@ -122,17 +71,8 @@ beta9pos = np.array([1, 1, 2, 2, 3, 3, 4, 5, 5])  # not recovered by concavifica
 beta9pos2 = np.array([5, 4, 4, 3, 0, 2, 2, 4, 6])  # the zero is not recovered with AB9custom with a =1.4. Need a > 2.6 (sum of the neighboring cluster penalties)
 beta9t = np.array([4, -2, -2, 1, 1, 1, 0, 0, 1])
 beta9c = np.array([2, 1, 1, 1, 1, 1, 1, 1, 1])
-'''
-a1 = 2.9
-a2 = 2.8
-a3 = 1.2
-a4 = 0.9
 
-b1 = 1
-b2 = 1.1
-b3 = 1.1
-b4 = 1
-'''
+
 a = np.array([2.9, 2.8, 1.2, 0.9, 0.8, 0.1, 2.5, 0, 0])
 b = np.array([1, 1.15, 1.25, 1.3, 1.3, 1.25, 1.15, 1])  # np.array([1, 1, 1.2, 1, 1.2, 1, 1.2, 1]) recove
 blog = np.array([np.log(2), np.log(3), np.log(4), np.log(5), np.log(6), np.log(7), np.log(8), np.log(9)])
@@ -187,6 +127,10 @@ print('A12bump:\n', np.round(A12Bcustom,3))
 #print('flassoA12:\n', np.round(flassoA12, 3))
 #print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 2]), 400))
 print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]), 400))
+'''
+
+
+
 '''
 a5 = 0.1
 a6 = 0.1
@@ -256,6 +200,29 @@ for i in range(2,100):
                                             b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),
                                             lambdas=0.9*lin_lambdas(12),
                                             n=i))
+'''
+
+#prox slope/pgd_slope
+'''
+X = np.array([[1.0, 0.0], [0.0, 1.0]])
+y = np.array([5.0, 4.0])
+lambdas = np.array([3.0, 1.0])
+
+print("prox_slope:", prox_slope(y,lambdas))# solves 0.5||y-b||^2+ <lambda, b_i> subject to b_1>=b_2>=0
+print("prox_slope_new:", prox_slope_new(y,lambdas)) #correct
+
+#print("prox_slope_new:", prox_slope_new(np.array([5, 4]), np.array([3, 1])))# different (incorrect) result
+#print("prox_slope_new:", prox_slope_new([5.0, 4.0], [3.0, 1.0])) # correct
+#print("prox_slope:", prox_slope(np.array([5, 4]), np.array([3, 1]))) #gives error
+
+
+#print("pgd_slope:", pgd_slope(X, y, lambdas, fit_intercept=False, gap_tol=1e-4, max_it=10_00, verbose=False,)) # solves 0.5/n*||y-Xb||^2+ <lambda,|b|_(i)>
+#print("pgd_slope:", pgd_slope(X, y, lambdas/2, fit_intercept=False, gap_tol=1e-4, max_it=10_00, verbose=False,))
+
+
+#print("pgd_slope_without_n:", pgd_slope_without_n(X, y, lambdas, fit_intercept=False, gap_tol=1e-6, max_it=10_000, verbose=False,)) # solves 0.5*||y-Xb||^2+ <lambda,|b|_(i)>
+#a=math.sqrt(2)
+#print("pgd_slope:", pgd_slope(a*X, a*y, lambdas, fit_intercept=False, gap_tol=1e-6, max_it=10_000, verbose=False,)) # solves 0.5||y-Xb||^2+ <lambda,|b|_(i)>
 '''
 
 #pattern attainability:
@@ -430,6 +397,42 @@ b_0_partition = y_partition_by_b_0(b_0_test3, b_0_test3)
 #print(u_reconstruction(b_0_test3, prox_k_clusters))
 #print(b_0_partition)
 #print(y_partition_by_b_0(b_0_test3, y_test3))
+'''
+
+#some RMSE/Pattern recovery plots
+'''
+#plot_performance(b_0=np.array([1, 0]), C=np.identity(2), lambdas=np.array([1.4, 0.6]), x=x, n=500)
+#plot_performance(b_0=np.array([0, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
+#plot_performance(b_0=np.array([1, 1]), C=np.array([[1, 0.8], [0.8, 1]]), lambdas=np.array([1.2, 0.8]), x=x, n=2000)
+#plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
+#plot_performance(b_0=np.array([0, 0, 1, 1]), C=C_block, lambdas=np.array([1.3, 1.1, 0.9, 0.7]), x=x, n=100)
+#plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 2, 2, 2]), C=block_diag_matrix9, lambdas=np.array([1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6]), x=x, n=200)
+
+
+# plot_performance(b_0=np.array([1, 1, 1, 1]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1], [0,0,1,0] lasso best
+#                  C=np.array([[1,rho,0,0],[rho,1,0, 0],[0,0,1,rho],[0,0,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  lambdas=np.array([1.6, 1.2, 0.6, 0.4]),
+#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
+#                  n=200,
+#                  Cov=0.4**2*np.array([[1,rho,0,0],[rho,1,0, 0],[0,0,1,rho],[0,0,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  flasso=True,
+#                  A_flasso=Acustom(a=np.ones(4), b=0.5 * np.ones(3)),
+#                  #glasso=True,
+#                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
+#                  smooth=True)
+
+# rho = 0.5
+# plot_performance(b_0=np.array([2, 2, 2, 2]), #interesting [1,1,0,1] slope best, [1,1,1,1] flasso best, [0,1,0,1] lasso best
+#                  C=np.array([[1,rho,rho,rho],[rho,1,rho, rho],[rho,rho,1,rho],[rho,rho,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
+#                  x=np.linspace(0,1,20), #np.linspace(0.48, 0.55, 10)
+#                  n=100,
+#                  Cov=0.4**2*np.array([[1,rho,rho,rho],[rho,1,rho, rho],[rho,rho,1,rho],[rho,rho,rho,1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
+#                  flasso=True,
+#                  A_flasso=Acustom(a=np.ones(4), b=0.5 * np.ones(3)),
+#                  #glasso=True,
+#                  #A_glasso=Acustom(a=np.ones(4), b=0.6 * np.array([0.9, 1.2, 0.9])),
+#                  smooth=True)
 '''
 
 #some graphical tests
