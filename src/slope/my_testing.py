@@ -246,6 +246,18 @@ print("pdg_slope_b_0_FISTA:", pgd_slope_b_0_FISTA(C, W, b_00, lambdas, stepsize_
 #print("pdg_slope_b_0_ISTA:", pgd_slope_b_0_ISTA(C, [5,4], b_00, [1,1], stepsize_t, 20)) #typeproblem
 '''
 
+  #FISTA speed test
+'''
+#convergence after 1 iteration for larger scaling, need to understand this better
+W=np.random.multivariate_normal(np.zeros(12), 0.2**2*block_diag_matrix12)
+for i in range(2,100):
+    print('pgd_fista:', pgd_slope_b_0_FISTA(C=block_diag_matrix12,
+                                            W=W,
+                                            b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),
+                                            lambdas=0.9*lin_lambdas(12),
+                                            n=i))
+'''
+
 #pattern attainability:
 '''
 for i in range(40):
@@ -282,8 +294,8 @@ lambdas_test1x = np.array([65.0, 42.0, 40.0, 40.0])
 print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, y_test1x, lambdas_test1x)) #(1.5, 1.5, 35, -30) coincides with theory
 print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60.0, 50.0, -5.0, 10.0], [65.0, 42.0, 40.0, 40.0])) #correct
 print("prox_slope_b_0_x:", prox_slope_b_0(b_0_test1x, [60, 50, -5, 10], [65, 42, 40, 40])) #correct after resolved type issues
-print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.6, n = 50))
-print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.35, n = 50))
+#print("pdg_slope_b_0_ISTA_x:", pgd_slope_b_0_ISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t = 0.6, n = 50))
+print("pdg_slope_b_0_FISTA_x:", pgd_slope_b_0_FISTA( C = np.identity(4), W = y_test1x, b_0 = b_0_test1x, lambdas = lambdas_test1x, t=0.6, tol=1e-5))
 '''
 
 

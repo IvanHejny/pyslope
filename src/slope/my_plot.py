@@ -131,10 +131,6 @@ def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None, tol=1e-4)
     correct_support_recovery = 0
     MSE = 0
     dim_reduction = 0
-    stepsize_t = 1/max(np.linalg.eigvals(C))  # stepsize <= 1/max eigenvalue of C;
-    # (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W));
-    # gives O(1/n^2) convergence;
-
 
     for i in range(n):
         # Generate random data with given covariance matrix
@@ -170,7 +166,7 @@ def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None, tol=1e-4)
             #print('b_0+eps_pat(np.round(u_hat,5))', pattern(b_0 + 0.01 * pattern(np.round(u_hat,5))))
         if all(pattern(b_0 + (1/(2*p+1)) * pattern(np.round(u_hat,5))) == b_0): # rounding to prevent numerical errors of order 1e-16
             correct_pattern_recovery += 1
-        if all(np.sign(pattern(b_0 + 0.0001 * np.round(u_hat, 3))) == np.sign(b_0)):
+        if all(np.sign(pattern(b_0 + (1/(2*p+1)) * pattern(np.round(u_hat,5)))) == np.sign(b_0)):
             correct_support_recovery += 1
 
     # Calculate average metrics over simulations
@@ -292,78 +288,65 @@ print('reducedOLSerror:', reducedOLSerror(b_0=np.array([1,0,1,0]), C=np.identity
 
 
 
-def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = None, glasso=False, A_glasso = None, reducedOLS=None, sigma=None, smooth = None):
+def plot_performance(b_0, C, lambdas, x, n, Cov=None, Lasso=True, SLOPE=True, flasso=False, A_flasso=None, glasso=False, A_glasso=None, reducedOLS=None, sigma=None, smooth=None, tol=1e-3):
     PattSLOPE = np.empty(shape=(0,))
     MseSLOPE = np.empty(shape=(0,))
-    SupportSLOPE = np.empty(shape=(0,))
 
     PattLasso = np.empty(shape=(0,))
     MseLasso = np.empty(shape=(0,))
-    SupportLasso = np.empty(shape=(0,))
 
     Pattglasso = np.empty(shape=(0,))
     Mseglasso = np.empty(shape=(0,))
-    Supportglasso = np.empty(shape=(0,))
 
     Pattflasso = np.empty(shape=(0,))
     Mseflasso = np.empty(shape=(0,))
-    Supportflasso = np.empty(shape=(0,))
 
     for i in range(len(x)):
-        resultSLOPE = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n)
-        #resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * np.ones(len(b_0)), n=n)
-        resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True, A=x[i]*Acustom(a=np.ones(len(b_0)), b=np.zeros(len(b_0)-1)))
-        # using admm for lasso instead of pgd_slope_b_0_FISTA
+        if SLOPE:
+            resultSLOPE = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, tol=tol)
+            MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
+            PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
 
-        MseSLOPE = np.append(MseSLOPE, resultSLOPE[0])
-        PattSLOPE = np.append(PattSLOPE, resultSLOPE[1])
-        #SupportSLOPE = np.append(SupportSLOPE, resultSLOPE[2])
+        if Lasso:
+            resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True, A=x[i]*Acustom(a=np.ones(len(b_0)), b=np.zeros(len(b_0)-1)), tol=tol)
+            MseLasso = np.append(MseLasso, resultLasso[0])
+            PattLasso = np.append(PattLasso, resultLasso[1])
 
-        MseLasso = np.append(MseLasso, resultLasso[0])
-        PattLasso = np.append(PattLasso, resultLasso[1])
-        #SupportLasso = np.append(SupportLasso, resultLasso[2])
-
-        if flasso == True:
+        if flasso:
             if A_flasso is None:
                 A_flasso = Acustom(a=np.ones(len(b_0)), b=np.ones(len(b_0) - 1))
             resultflasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True,
                                       A=x[i]*A_flasso)
             Mseflasso= np.append(Mseflasso, resultflasso[0])
             Pattflasso = np.append(Pattflasso, resultflasso[1])
-            #Supportflasso = np.append(Supportflasso, resultflasso[2])
 
-        if glasso == True:
+        if glasso:
             if A_glasso is None:
                 A_glasso = Acustom(a=np.ones(len(b_0)), b=np.ones(len(b_0) - 1))
             resultglasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True,
                                       A=x[i] * A_glasso)
             Mseglasso= np.append(Mseglasso, resultglasso[0])
             Pattglasso = np.append(Pattglasso, resultglasso[1])
-            #Supportglasso = np.append(Supportglasso, resultglasso[2])
 
         resultOLS = 0.5*(MseSLOPE[0] + MseLasso[0])
 
-    if smooth == True:
-        # Spline interpolation for smoother curve
-        #x_smooth = np.concatenate((x, np.linspace(x.min(), x.max(), 10*(len(x)-1)+1)))
-        #x_smooth = np.sort(x_smooth)
-        x_smooth = np.linspace(x.min(), x.max(), 20 * (len(x) - 1) + 1)  # (4, 20) times more points than x
-
-        spl1 = PchipInterpolator(x, MseSLOPE)  #
-        spl2 = PchipInterpolator(x, PattSLOPE)  #
-        spl3 = PchipInterpolator(x, MseLasso)  #
-        spl4 = PchipInterpolator(x, PattLasso)  #
+    if smooth:
+        x_smooth = np.linspace(x.min(), x.max(), 20 * (len(x) - 1) + 1)
+        spl1 = PchipInterpolator(x, MseSLOPE)
+        spl2 = PchipInterpolator(x, PattSLOPE)
+        spl3 = PchipInterpolator(x, MseLasso)
+        spl4 = PchipInterpolator(x, PattLasso)
 
         MseSLOPE = spl1(x_smooth)
         PattSLOPE = spl2(x_smooth)
         MseLasso = spl3(x_smooth)
         PattLasso = spl4(x_smooth)
-        if flasso == True:
+        if flasso:
             spl5 = PchipInterpolator(x, Mseflasso)
             spl6 = PchipInterpolator(x, Pattflasso)
             Mseflasso = spl5(x_smooth)
             Pattflasso = spl6(x_smooth)
-        if glasso == True:
+        if glasso:
             spl7 = PchipInterpolator(x, Mseglasso)
             spl8 = PchipInterpolator(x, Pattglasso)
             Mseglasso = spl7(x_smooth)
@@ -371,45 +354,31 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
 
         x = x_smooth
 
-    # Plot the functions on the same graph
     plt.figure(figsize=(6, 6))
-    plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)  # Plot RMSE of Lasso
-    plt.plot(x, PattLasso, label='recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by Lasso
-    plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)  # Plot RMSE of SLOPE
-    plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)  # Plot probability of pattern recovery by SLOPE
-    if flasso == True:
+    if Lasso:
+        plt.plot(x, MseLasso, label='RMSE Lasso', color='blue', lw=1.5, alpha=0.9)
+        plt.plot(x, PattLasso, label='recovery Lasso', color='blue', linestyle='dashed', lw=1.5)
+    if SLOPE:
+        plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)
+        plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)
+    if flasso:
         plt.plot(x, Mseflasso, label='RMSE FLasso', color='orange', lw=1.5, alpha=0.9)
-        plt.plot(x, Pattflasso+0.02, label='recovery FLasso', color='orange', linestyle='dashed', lw=1.5, alpha=0.7)# inc by 0.02 for better visibility if no pattern recovery
-
-    if glasso == True:
+        plt.plot(x, Pattflasso+0.02, label='recovery FLasso', color='orange', linestyle='dashed', lw=1.5, alpha = 0.8)
+    if glasso:
         plt.plot(x, Mseglasso, label='RMSE ConFLasso', color='purple', lw=1.5, alpha=0.9)
-        plt.plot(x, Pattglasso, label='recovery ConFLasso', color='purple', linestyle='dashed', lw=1.5)
-    if reducedOLS == True:
+        plt.plot(x, Pattglasso, label='recovery ConFLasso', color='purple', linestyle='dashed', lw=1.5, alpha = 0.8)
+    if reducedOLS:
         reducedOLS = reducedOLSerror(b_0, C, n=100000, sigma=sigma)
-        plt.scatter(-0.025, reducedOLS[1], color='blue', alpha=0.7, s=70)  # reduced RMSE if Lasso pattern is known
-        plt.scatter(0, reducedOLS[2], color='orange', alpha=0.7, s=70)  # reduced RMSE if FusedLasso pattern is known
-        plt.scatter(0, reducedOLS[3], color='green', alpha=0.7, s=70)  # reduced RMSE if SLOPE pattern is known
-        # plt.scatter(0.01, reducedOLS[0], color='black', alpha = 0.6)  # RMSE of OLS
+        plt.scatter(-0.025, reducedOLS[1], color='blue', alpha=0.7, s=70)
+        plt.scatter(0, reducedOLS[2], color='orange', alpha=0.7, s=70)
+        plt.scatter(0, reducedOLS[3], color='green', alpha=0.7, s=70)
+    plt.scatter(0, resultOLS, color='red', label='RMSE OLS', alpha=0.9, s=70)
 
-    #plt.plot(x, PattLasso, label='pattern recovery Lasso', color='blue', linestyle='dashed', lw=1.5)  # Plot prob of pattern by Lasso
-    #plt.plot(x, SupportSLOPE, label='support recovery SLOPE', color='green', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by SLOPE
-    #plt.plot(x, SupportLasso, label='support recovery Lasso', color='blue', linestyle='-.', lw=1.5, alpha=0.5)  # Plot prob of support recovery by Lasso
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.xlabel(r'$\alpha$', fontsize=16)
 
-    plt.scatter(0, resultOLS, color='red', label='RMSE OLS', alpha = 0.9, s=70) # Plot RMSE of OLS as a scatter point at 0
-
-
-    # Increase the size of x-axis and y-axis tick labels
-    plt.xticks(fontsize=14)  # font size for x-axis tick labels
-    plt.yticks(fontsize=14)  # font size for y-axis tick labels
-
-    plt.xlabel(r'$\alpha$', fontsize=16)  # penalty scaling
-    #plt.ylabel('Performance')
-    #plt.title('Pattern Recovery and RMSE')
-    #caption_text = f'$b^0$ = {b_0}, $\lambda = \sigma$ {lambdas}' #compound or block diagonal C block diagonal with one compound 0.8 block for each cluster, and penalty scaling
-    #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
-    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
-
-    plt.legend(fontsize=15)  # font size for legend #15for small plots, 14 for bigger plots
+    plt.legend(fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -480,7 +449,7 @@ plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array
                   C=block_diag_matrix12,
                   lambdas=lin_lambdas(12),
                   x=np.linspace(0, 2, 24),
-                  n=50,
+                  n=100,
                   Cov=0.2**2*block_diag_matrix12, #block_diag_matrix12,
                   flasso=True,
                   A_flasso=flassoA12,

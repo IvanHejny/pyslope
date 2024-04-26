@@ -414,7 +414,7 @@ Theta4_AR = np.array([[3, -1, 0, 0], [-1, 4, -1, 0], [0, -1, 4, -1], [0, 0, -1, 
 
 
 
-def plot_performance(Theta0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=False, flasso=False, A_flasso = None, glasso=False, A_glasso = None, smooth = None, tol=1e-4, max_iter=2000):
+def plot_gperformance(Theta0, x, n, lambdas_low=None, C=None, Cov=None, patMSE=False, flasso=False, A_flasso = None, glasso=False, A_glasso = None, smooth = None, tol=1e-4, max_iter=2000):
     """
     Plot performance metrics for different regularization methods.
 
@@ -693,7 +693,7 @@ np.set_printoptions(threshold=np.inf)
 # PERFORMANCE PLOTS
 # Here we seperately plot rmse performance and pattern recovery for SLOPE and Lasso
 # The plots are very rough, for better results, increase the number of simulations n, for quicker results, decrease n, or p or increase tol
-# To display pattern recovery for SLOPE in the same plot, uncomment the corresponding line in the plot_performance function. Or Use plot_pattern_recovery function.
+# To display pattern recovery for SLOPE in the same plot, uncomment the corresponding line in the plot_gperformance function. Or Use plot_pattern_recovery function.
 # If you do not wish to see the number of iterates in FISTA, comment second to last line in pgd_gslope_Theta0_FISTA function.
 
 
@@ -703,14 +703,14 @@ Sigma9 = comp_sym_corr(0.1, 9)
 Theta9 = np.linalg.inv(Sigma9)
 print('Theta9:\n', np.round(Theta9, 2))
 print('stepsize in FISTA:\n', 1/max(np.linalg.eigvals(Hessian(Sigma9))))
-plot_performance(Theta0=Theta9, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 2, 5), patMSE=True, n=50, tol=1e-4, smooth=True) #G # rho=0.1 SLOPE beats Lasso
-#plot_performance(Theta0=Theta9, lambdas_low=bh_lambdas(9*8/2, q=0.9), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # BH does not improve linear sequence
+plot_gperformance(Theta0=Theta9, lambdas_low=lin_lambdas(9 * 8 / 2), x=np.linspace(0, 2, 5), patMSE=True, n=50, tol=1e-4, smooth=True) #G # rho=0.1 SLOPE beats Lasso
+#plot_gperformance(Theta0=Theta9, lambdas_low=bh_lambdas(9*8/2, q=0.9), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # BH does not improve linear sequence
 
 Sigma20 = comp_sym_corr(0.1, 20)
 Theta20 = np.linalg.inv(Sigma20)
 #print('Theta20:\n', np.round(Theta20, 2))
 #print('eval20:\n', 1/max(np.linalg.eigvals(Hessian(Sigma20))))
-#plot_performance(Theta0=Theta20, lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # rho=0.2 SLOPE beats Lasso
+#plot_gperformance(Theta0=Theta20, lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # rho=0.2 SLOPE beats Lasso
 
 
 # Block diagonal precision matrix
@@ -719,13 +719,13 @@ Theta20 = np.linalg.inv(Sigma20)
 # 20x20 block matrix consisting of two 10x10 compound symmetric blocks
 Sigma20_block = np.block([[comp_sym_corr(0.2,10), np.zeros((10, 10))], [np.zeros((10, 10)), comp_sym_corr(0.2,10)]])
 
-plot_performance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.05), x=np.linspace(0, 2, 7), patMSE=True, n=50, smooth=True, tol=1e-4) # rho 0.2 SLOPE beats Lasso
+plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20 * 19 / 2, 0.05), x=np.linspace(0, 2, 7), patMSE=True, n=50, smooth=True, tol=1e-4) # rho 0.2 SLOPE beats Lasso
 
 my_lambdas = np.ones(int(20*19/2))
 my_lambdas[0] = my_lambdas[0] + 10
 my_lambdas[1] = my_lambdas[1] + 4
 #print('my_lambdas:\n', my_lambdas)
-#plot_performance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 2, 7), patMSE=True, n=50, smooth=True, tol=1e-4) #
+#plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 2, 7), patMSE=True, n=50, smooth=True, tol=1e-4) #
 
 
 # Pattern recovery
@@ -747,12 +747,12 @@ print('bh_lambdas:\n', bh_lambdas(9*8/2, 0.1))
 print('1e-3:', 1e-3)
 
 
-#plot_performance(Theta0=Theta8_block, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, n=30, smooth=True, tol=1e-3) #meh # Lasso beats SLOPE
-#plot_performance(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.08), x=np.linspace(0, 0.3, 5), patMSE=True, n=100, smooth=False, tol=1e-3) #meh # rho 0.8 meh SLOPE beats Lasso
+#plot_gperformance(Theta0=Theta8_block, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 0.6, 5), patMSE=True, n=30, smooth=True, tol=1e-3) #meh # Lasso beats SLOPE
+#plot_gperformance(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.08), x=np.linspace(0, 0.3, 5), patMSE=True, n=100, smooth=False, tol=1e-3) #meh # rho 0.8 meh SLOPE beats Lasso
 
 
-#plot_performance(Theta0=Theta8_block, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 2, 5), patMSE=True, n=200, smooth=True) # rho 0.1
-#plot_performance(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.5), x=np.linspace(0, 2, 5), patMSE=True, n=200, smooth=True) # rho 0.1
+#plot_gperformance(Theta0=Theta8_block, lambdas_low=lin_lambdas(9*8/2), x=np.linspace(0, 2, 5), patMSE=True, n=200, smooth=True) # rho 0.1
+#plot_gperformance(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.5), x=np.linspace(0, 2, 5), patMSE=True, n=200, smooth=True) # rho 0.1
 #plot_pattern_recovery(Theta0=Theta8_block, lambdas_low=bh_lambdas(9*8/2, 0.2), x=np.linspace(0, 5, 5), Cov=0.2**2*Hessian(np.linalg.inv(Theta8_block)), n=100, smooth=True) # does not recover the pattern
 '''
 
@@ -764,13 +764,13 @@ Theta_p_band = band_mat(p, 5, a, a, a)
 print('band_p:\n', band_mat(p, 5, a, a, a))
 print('stepsize_band_p:\n', 1 / max(np.linalg.eigvals(Hessian(np.linalg.inv(band_mat(p, 5, a, a, a))))))
 
-#plot_performance(Theta0=Theta_p_band, lambdas_low=bh_lambdas(20*19/2, 0.05), x=np.linspace(0, 0.3, 7), patMSE=True, n=20, smooth=False) # not clear
-#plot_performance(Theta0=Theta_p_band, lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 0.4, 10), patMSE=True, n=10, smooth=False) # SLOPE not so good
+#plot_gperformance(Theta0=Theta_p_band, lambdas_low=bh_lambdas(20*19/2, 0.05), x=np.linspace(0, 0.3, 7), patMSE=True, n=20, smooth=False) # not clear
+#plot_gperformance(Theta0=Theta_p_band, lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 0.4, 10), patMSE=True, n=10, smooth=False) # SLOPE not so good
 
 my_lambdas = np.ones(int(p*(p-1)/2))
 my_lambdas[0] = my_lambdas[0] + 10
 my_lambdas[1] = my_lambdas[1] + 4
-plot_performance(Theta0=Theta_p_band, lambdas_low=my_lambdas, x=np.linspace(0, 0.4, 10), n=30, patMSE=True, smooth=True) # SLOPE a bit better than Lasso
+plot_gperformance(Theta0=Theta_p_band, lambdas_low=my_lambdas, x=np.linspace(0, 0.4, 10), n=30, patMSE=True, smooth=True) # SLOPE a bit better than Lasso
 
 
 # AR precision matrix
@@ -786,5 +786,5 @@ print('Theta4_AR:\n', Theta4_AR)
 #plot_pattern_recovery(Theta0=Theta4_AR, lambdas_low=bh_lambdas(6, 0.5), x=np.linspace(0, 100, 5), n=30, smooth=True) # recovers the pattern
 #plot_pattern_recovery(Theta0=Theta4_AR, lambdas_low=bh_lambdas(6, 0.6), x=np.linspace(0, 100, 5), n=30, smooth=True) # does not recover the pattern
 
-#plot_performance(Theta0=Theta4_AR, lambdas_low=np.array([2, 1.8, 1.6, 1.4, 1.2, 1])/1.5, x=np.linspace(0, 0.2, 5), n=200, smooth=False)
-#plot_performance(Theta0=Theta4_AR, lambdas_low=np.array([2, 1.5, 1.3, 1.1, 1.05, 1])/1.325, x=np.linspace(0, 0.2, 10), n=500, smooth=True)
+#plot_gperformance(Theta0=Theta4_AR, lambdas_low=np.array([2, 1.8, 1.6, 1.4, 1.2, 1])/1.5, x=np.linspace(0, 0.2, 5), n=200, smooth=False)
+#plot_gperformance(Theta0=Theta4_AR, lambdas_low=np.array([2, 1.5, 1.3, 1.1, 1.05, 1])/1.325, x=np.linspace(0, 0.2, 10), n=500, smooth=True)

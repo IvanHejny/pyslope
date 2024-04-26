@@ -385,11 +385,15 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, n=None, t=None, tol=1e-4, max_iter=2
     u_kmin2 = u_0
     u_kmin1 = u_0
     v = u_0
+    if n is None:
+        max_iter = max_iter
+    else:
+        max_iter = n
     if t == None:
         t = 1 / np.max(np.linalg.eigvals(C))  # default stepsize = 1/max(eigenvalues of C) to guarantee O(1/n^2) convergence
         t = np.float32(np.real(t))
-    k=1
-    for k in range(max_iter):
+
+    for k in range(1, max_iter):
         v = u_kmin1 + ((k-2)/(k+1))*(u_kmin1-u_kmin2)
         grad_step = v - t * (C @ v - W)
         u_k = prox_slope_b_0(b_0, grad_step, t * lambdas)
@@ -398,11 +402,13 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, n=None, t=None, tol=1e-4, max_iter=2
         if n is None:
             p = len(b_0)
             norm_diff = np.linalg.norm(u_kmin1 - u_kmin2) / np.sqrt(p)
-            if norm_diff < tol and k > 4:
+            if norm_diff < tol: #and k > 4:
+                print('final_iter:', k)  # uncomment line for final iterate
                 break
             elif k == max_iter - 1:
                 print('Warning: Maximum number of iterations', max_iter, ' reached. Convergence of FISTA might be slow or tol too low.')
-    print('final_iter:', k)  # uncomment line for final iterate
+
+    #print('stpsize:', t)  # uncomment line for stepsize
     return (u_k)
 
 
