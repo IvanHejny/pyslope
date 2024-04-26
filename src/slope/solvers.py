@@ -356,7 +356,7 @@ def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
         prox_step = prox_slope_b_0(b_0, grad_step, lambdas * stepsize_t)
     return(prox_step)
 
-def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
+def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, n=None, t=None, tol=1e-4, max_iter=2000):
     """Minimizes: 1/2 u^T*C*u-u^T*W+J'_{lambda}(b^0; u),
      where J'_{lambda}(b^0; u) is the directional SLOPE derivative
        Parameters
@@ -385,14 +385,24 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, t, n):
     u_kmin2 = u_0
     u_kmin1 = u_0
     v = u_0
-    stepsize_t = np.float64(t)
+    if t == None:
+        t = 1 / np.max(np.linalg.eigvals(C))  # default stepsize = 1/max(eigenvalues of C) to guarantee O(1/n^2) convergence
+        t = np.float32(np.real(t))
     k=1
-    for k in range(n):
+    for k in range(max_iter):
         v = u_kmin1 + ((k-2)/(k+1))*(u_kmin1-u_kmin2)
-        grad_step = v - stepsize_t * (C @ v - W)
-        u_k = prox_slope_b_0(b_0, grad_step, stepsize_t * lambdas)
+        grad_step = v - t * (C @ v - W)
+        u_k = prox_slope_b_0(b_0, grad_step, t * lambdas)
         u_kmin2 = u_kmin1
         u_kmin1 = u_k
+        if n is None:
+            p = len(b_0)
+            norm_diff = np.linalg.norm(u_kmin1 - u_kmin2) / np.sqrt(p)
+            if norm_diff < tol and k > 4:
+                break
+            elif k == max_iter - 1:
+                print('Warning: Maximum number of iterations', max_iter, ' reached. Convergence of FISTA might be slow or tol too low.')
+    print('final_iter:', k)  # uncomment line for final iterate
     return (u_k)
 
 

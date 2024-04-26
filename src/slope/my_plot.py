@@ -102,7 +102,7 @@ def patternMSE(b_0, C, lambdas, n, Cov = None):
 '''
 
 
-def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None):
+def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None, tol=1e-4):
     """
     Calculate mean squared error (MSE), probability of pattern and support recovery, and dimension reduction
     for a given pattern vector 'b_0', covariance C, and penalty sequence lambdas, for SLOPE, or possibly Generalized/Fused Lasso.
@@ -135,6 +135,7 @@ def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None):
     # (max eval of C is the Lipschitz constant of grad(1/2 uCu - uW)=(Cu-W));
     # gives O(1/n^2) convergence;
 
+
     for i in range(n):
         # Generate random data with given covariance matrix
         W = np.random.multivariate_normal(np.zeros(p), Cov)
@@ -145,7 +146,14 @@ def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None):
                 A = Acustom(a=np.ones(len(b_0)), b=np.ones(len(b_0)-1))
             u_hat = admm_glasso(C=C, A=A, w=W, beta0=b_0, lambdas=1.0)
         else:
-            u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=20 ) # 20 iterations for FISTA, might need more in some cases (like in graphical examples we need around n=200)
+            u_hat = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, tol=tol ) # 20 iterations for FISTA, might need more in some cases (like in graphical examples we need around n=200)
+
+            #u_hatminus = pgd_slope_b_0_FISTA(C=C, W=W, b_0=b_0, lambdas=lambdas, t=stepsize_t, n=20)
+
+            #print('u_hat:', u_hat, pattern(u_hat))
+            #print('u_hatminus:', u_hatminus, pattern(u_hatminus))
+            #print('pat_error:', pattern(u_hat)-pattern(u_hatminus))
+            #print('hat_error:', np.round(u_hat-u_hatminus,4))
 
         # Calculate MSE
         norm2 = np.linalg.norm(u_hat) ** 2
@@ -155,7 +163,12 @@ def patternMSE(b_0, C, lambdas, n, Cov=None, genlasso=False, A = None):
         dim_reduction += p - len(np.unique(u_hat))
 
         # Check pattern and support recoveries
-        if all(pattern(b_0 + 0.0001 * np.round(u_hat, 3)) == b_0):
+        #if genlasso == True:
+            #print('u_hat', u_hat)
+            #print('pattern(u_hat)', pattern(u_hat))
+            #print('b_0+eps_pat(u_hat)', pattern(b_0 + 0.01 * pattern(u_hat)))
+            #print('b_0+eps_pat(np.round(u_hat,5))', pattern(b_0 + 0.01 * pattern(np.round(u_hat,5))))
+        if all(pattern(b_0 + (1/(2*p+1)) * pattern(np.round(u_hat,5))) == b_0): # rounding to prevent numerical errors of order 1e-16
             correct_pattern_recovery += 1
         if all(np.sign(pattern(b_0 + 0.0001 * np.round(u_hat, 3))) == np.sign(b_0)):
             correct_support_recovery += 1
@@ -396,7 +409,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, flasso=False, A_flasso = N
     #plt.figtext(0.5, 0.01, caption_text, wrap=True, horizontalalignment='center', fontsize=10, color='black')
     #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True, ncol=3)
 
-    #plt.legend(fontsize=15)  # font size for legend
+    plt.legend(fontsize=15)  # font size for legend #15for small plots, 14 for bigger plots
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -426,6 +439,8 @@ b = np.array([1, 1.15, 1.25, 1.3, 1.3, 1.25, 1.15, 1])
 A9Bcustom = Acustom(a=1.4*np.ones(9), b=b[:8])
 #A9Bcustom = Acustom(a=np.ones(9), b=np.ones(8))
 
+#def concave
+
 bump_quadratic = lambda curvature, p: np.array([1+curvature*i*(p-i) for i in range(1, p)])
 print('bump_quadratic', bump_quadratic(0,9))
 
@@ -440,7 +455,7 @@ flassoA9 = Acustom(a=np.ones(9), b=np.ones(8) * sum(A9bump[i][i] for i in range(
 #print('bump_quadratic:', bump_quadratic(5,9))
 
 print('slope pen', lin_lambdas(12))
-curvature = 0.02 # (0.04, 0.8) for mon beta
+curvature = 0.04 # (0.04, 0.8) for mon beta
 cluster_scaling = 0.8
 A12bump = Acustom(a=np.ones(12), b=cluster_scaling*bump_quadratic(curvature=curvature, p=12))
 print('A12bump:\n', np.round(A12bump,3))
@@ -461,17 +476,19 @@ flassoA12 = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12bump[i][i] for i in ra
 
 
 
-# plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array([1, 1, 1, 0, 0, 0, 3, 3, 3, 2, 2, 2])
-#                   C=block_diag_matrix12,
-#                   lambdas=lin_lambdas(12),
-#                   x=np.linspace(0, 2, 24),
-#                   n=100,
-#                   Cov=0.2**2*block_diag_matrix12, #block_diag_matrix12,
-#                   flasso=True,
-#                   A_flasso=flassoA12,
-#                   glasso=True,
-#                   A_glasso=A12bump,
-#                   smooth=True)
+plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array([1, 1, 1, 0, 0, 0, 3, 3, 3, 2, 2, 2])
+                  C=block_diag_matrix12,
+                  lambdas=lin_lambdas(12),
+                  x=np.linspace(0, 2, 24),
+                  n=50,
+                  Cov=0.2**2*block_diag_matrix12, #block_diag_matrix12,
+                  flasso=True,
+                  A_flasso=flassoA12,
+                  glasso=True,
+                  A_glasso=A12bump,
+                  smooth=True)
+                  #reducedOLS=True,
+                  #sigma=0.2)
 
 
 
