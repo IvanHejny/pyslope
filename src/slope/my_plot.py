@@ -127,10 +127,10 @@ def reducedOLSerror(b_0, C, n=10000, sigma = 1):
         redMSE_Flasso = redMSE_Flasso + norm2_Flasso
 
     return np.sqrt(MSE_OLS / n), np.sqrt(redMSE_Lasso / n), np.sqrt(redMSE_Flasso / n), np.sqrt(redMSE_SLOPE / n)
-print('reducedOLSerror:', reducedOLSerror(b_0=np.array([1,0,1,1,0]), C=np.identity(5)))
+#print('reducedOLSerror:', reducedOLSerror(b_0=np.array([1,0,1,1,0]), C=np.identity(5)))
 
 
-def plot_performance(b_0, C, lambdas, x, n, Cov=None, Lasso=True, SLOPE=True, flasso=False, A_flasso=None, glasso=False, A_glasso=None, reducedOLS=None, sigma=None, smooth=None, tol=1e-3):
+def plot_performance(b_0, C, lambdas, x, n, Cov=None, Lasso=True, SLOPE=True, flasso=False, A_flasso=None, glasso=False, A_glasso=None, reducedOLS=None, sigma=None, smooth=None, legend = True, tol=1e-3):
     PattSLOPE = np.empty(shape=(0,))
     MseSLOPE = np.empty(shape=(0,))
 
@@ -248,7 +248,8 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, Lasso=True, SLOPE=True, fl
     plt.yticks(fontsize=14)
     plt.xlabel(r'$\alpha$', fontsize=16)
 
-    plt.legend(fontsize=14)
+    if legend:
+        plt.legend(fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.show()

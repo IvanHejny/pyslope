@@ -15,8 +15,9 @@ A12concave = Aconcave(12, curvature, cluster_scaling)
 #print('Aconcave', Aconcave(12, 0.04, 0.8))
 A12flasso = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12concave[i][i] for i in range(12)) * (1 / 11))
 #print('A12flasso:\n', np.round(A12flasso, 3))
+#print('lin_lambdas(12):', lin_lambdas(12))
 
-
+'''
 plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array([1, 1, 1, 0, 0, 0, 3, 3, 3, 2, 2, 2])
                  C=block_diag_matrix12,
                  lambdas=lin_lambdas(12),
@@ -31,26 +32,27 @@ plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array
                  tol=1e-4)
                   #reducedOLS=True,
                   #sigma=0.2)
-
-
-
-# main simulations where SLOPE can beat Fused Lasso
 '''
+
+
+# comparison simulations for [0,0,1,0], [1,1,1,1], and [1,0,1,0]
+
 rho = 0.8
-plot_performance(b_0=np.array([1, 0, 1, 0]), #interesting [1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
+plot_performance(b_0=np.array([1, 1, 1, 1]), #[1,1,0,1], [1,0,1,0] slope best, [1,1,1,1] flasso best, [0,1,1,0], [0,0,1,0] lasso best
                  C=np.array([[1, 0, rho, 0], [0, 1, 0, rho], [rho, 0, 1, 0], [0, rho, 0, 1]]), #(1-rho) * np.identity(4) + rho * np.ones((4, 4)),
-                 lambdas=np.array([1.6, 1.2, 0.8, 0.4]),
+                 lambdas= np.array([1.6, 1.2, 0.8, 0.4]), #np.array([4, 0, 0, 0]), #np.array([8, 4.1, 4, 3.9])/(20/4), #np.array([1.6, 1.2, 0.8, 0.4])
                  x=np.linspace(0,1,20),  # np.linspace(0.48, 0.55, 10)
-                 n=500,
+                 n=1000,
                  Cov=0.4**2*np.array([[1, 0, rho, 0], [0, 1, 0, rho], [rho, 0, 1, 0], [0, rho, 0, 1]]),  # (1-rho) * np.identity(4) + rho * np.ones((4, 4)),
                  flasso=True,
                  A_flasso=Acustom(a=np.ones(4), b=1 * np.ones(3)),
                  #glasso=True,
                  #A_glasso=Acustom(a=np.ones(4), b=0.4 * np.array([1, 1, 1])),
-                 reducedOLS=True,
-                 sigma=0.4,
-                 smooth=True)
-'''
+                 #reducedOLS=True,
+                 #sigma=0.4,
+                 smooth=True,
+                 legend=True)
+
 
 #Phase Transition in Pattern recovery
 '''

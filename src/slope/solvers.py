@@ -403,7 +403,7 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, n=None, t=None, tol=1e-4, max_iter=2
             p = len(b_0)
             norm_diff = np.linalg.norm(u_kmin1 - u_kmin2) / np.sqrt(p)
             if norm_diff < tol: #and k > 4:
-                print('final_iter:', k)  # uncomment line for final iterate
+                #print('final_iter:', k)  # uncomment line for final iterate
                 break
             elif k == max_iter - 1:
                 print('Warning: Maximum number of iterations', max_iter, ' reached. Convergence of FISTA might be slow or tol too low.')
