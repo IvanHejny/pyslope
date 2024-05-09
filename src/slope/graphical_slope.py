@@ -703,36 +703,42 @@ Sigma9 = comp_sym_corr(0.1, 9)
 Theta9 = np.linalg.inv(Sigma9)
 print('Theta9:\n', np.round(Theta9, 2))
 print('stepsize in FISTA:\n', 1/max(np.linalg.eigvals(Hessian(Sigma9))))
-plot_gperformance(Theta0=Theta9, lambdas_low=lin_lambdas(9 * 8 / 2), x=np.linspace(0, 2, 5), patMSE=True, n=50, tol=1e-4, smooth=True) #G # rho=0.1 SLOPE beats Lasso
+#plot_gperformance(Theta0=Theta9, lambdas_low=lin_lambdas(9 * 8 / 2), x=np.linspace(0, 2, 7), patMSE=True, n=100, tol=1e-4, smooth=True) #G # rho=0.1 SLOPE beats Lasso
 #plot_gperformance(Theta0=Theta9, lambdas_low=bh_lambdas(9*8/2, q=0.9), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # BH does not improve linear sequence
 
 Sigma20 = comp_sym_corr(0.1, 20)
 Theta20 = np.linalg.inv(Sigma20)
 #print('Theta20:\n', np.round(Theta20, 2))
 #print('eval20:\n', 1/max(np.linalg.eigvals(Hessian(Sigma20))))
-#plot_gperformance(Theta0=Theta20, lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # rho=0.2 SLOPE beats Lasso
-
+#plot_gperformance(Theta0=Theta20, lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # rho=0.1 SLOPE beats Lasso
+#plot_gperformance(Theta0=Theta20, lambdas_low=bh_lambdas(20*19/2, 0.5), x=np.linspace(0, 2, 5), patMSE=True, n=10, smooth=True) # bh not better than linear sequence
 
 # Block diagonal precision matrix
 
 
 # 20x20 block matrix consisting of two 10x10 compound symmetric blocks
 Sigma20_block = np.block([[comp_sym_corr(0.2,10), np.zeros((10, 10))], [np.zeros((10, 10)), comp_sym_corr(0.2,10)]])
+print('Theta20_block:\n', np.round(np.linalg.inv(Sigma20_block), 2))
+print('lin_lambdas:\n', lin_lambdas(20*19/2))
+#plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=lin_lambdas(20 * 19 / 2), x=np.linspace(0, 2, 7), patMSE=True, n=300, smooth=True, tol=1e-4)
 
-plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20 * 19 / 2, 0.05), x=np.linspace(0, 2, 7), patMSE=True, n=50, smooth=True, tol=1e-4) # rho 0.2 SLOPE beats Lasso
+print('bh_lambdas0.05:\n', bh_lambdas(20*19/2, 0.05))
+print('bh_lambdas0.5:\n', bh_lambdas(20*19/2, 0.5))
+#plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20 * 19 / 2, 0.5), x=np.linspace(0, 2, 7), patMSE=True, n=200, smooth=True, tol=1e-4) # rho 0.2 SLOPE beats Lasso
 
 my_lambdas = np.ones(int(20*19/2))
 my_lambdas[0] = my_lambdas[0] + 10
 my_lambdas[1] = my_lambdas[1] + 4
-#print('my_lambdas:\n', my_lambdas)
-#plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 2, 7), patMSE=True, n=50, smooth=True, tol=1e-4) #
+my_lambdas = my_lambdas * (20*19/2)/((20*19-2+my_lambdas[0]+my_lambdas[1])/2)
+print('my_lambdas:\n', my_lambdas)
+#plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 2, 7), patMSE=True, n=100, smooth=True, tol=1e-4) #
 
 
 # Pattern recovery
-#plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.05), x=np.linspace(0, 30, 5), n=10, smooth=True) # recovers but slow
-#plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 30, 5), n=10, smooth=True) # recovers but slow
-#plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 20, 5), n=10, smooth=True) # fast recovery
-
+plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 15
+plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.05), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 22
+plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.5), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 10
+plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 15
 
 
 '''
@@ -770,7 +776,7 @@ print('stepsize_band_p:\n', 1 / max(np.linalg.eigvals(Hessian(np.linalg.inv(band
 my_lambdas = np.ones(int(p*(p-1)/2))
 my_lambdas[0] = my_lambdas[0] + 10
 my_lambdas[1] = my_lambdas[1] + 4
-plot_gperformance(Theta0=Theta_p_band, lambdas_low=my_lambdas, x=np.linspace(0, 0.4, 10), n=30, patMSE=True, smooth=True) # SLOPE a bit better than Lasso
+#plot_gperformance(Theta0=Theta_p_band, lambdas_low=my_lambdas, x=np.linspace(0, 0.4, 10), n=30, patMSE=True, smooth=True) # SLOPE a bit better than Lasso
 
 
 # AR precision matrix
