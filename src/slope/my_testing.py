@@ -44,7 +44,7 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic e
 #print(glasso_sampler(C9_block, AFLmon(9, 0.1), np.array([1,1,1,0,0,0,2,2,2]), 40)) #reshuffled beta0, no issue
 
 #glasso_sampler test
-'''
+#'''
 beta2 = np.array([1, 0])
 beta3 = np.array([1, 2, 2])  # for p=3, all patterns are recovered by AFLmon(3, a=1.1)
 beta3bug = np.array([1, 20, 20])
@@ -127,7 +127,7 @@ print('A12bump:\n', np.round(A12Bcustom,3))
 #print('flassoA12:\n', np.round(flassoA12, 3))
 #print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 2]), 400))
 print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]), 400))
-'''
+#'''
 
 
 

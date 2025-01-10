@@ -17,7 +17,7 @@ A12flasso = Acustom(a=np.ones(12), b=np.ones(11) * sum(A12concave[i][i] for i in
 #print('A12flasso:\n', np.round(A12flasso, 3))
 #print('lin_lambdas(12):', lin_lambdas(12))
 
-'''
+
 plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array([1, 1, 1, 0, 0, 0, 3, 3, 3, 2, 2, 2])
                  C=block_diag_matrix12,
                  lambdas=lin_lambdas(12),
@@ -32,7 +32,7 @@ plot_performance(b_0=np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]),  # np.array
                  tol=1e-4)
                   #reducedOLS=True,
                   #sigma=0.2)
-'''
+
 
 
 # comparison simulations for [0,0,1,0], [1,1,1,1], and [1,0,1,0]

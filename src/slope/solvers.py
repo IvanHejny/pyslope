@@ -565,7 +565,7 @@ def proj_onto_pattern_space(vector):
     U = pattern_matrix(vector)
     return U @ np.linalg.inv(U.T @ U) @ U.T
 
-
+'''
 def lin_lambdas(p):
     """
     Generate linear penalty sequence.
@@ -580,6 +580,27 @@ def lin_lambdas(p):
         array_like: Array of linearly decreasing penalty values.
     """
     return np.flip(np.arange(1, p + 1)) / ((p + 1) / 2)
+'''
+def lin_lambdas(p, lowest_lambda=None):
+    """
+    Generate linear penalty sequence.
+
+    This function generates a linear penalty sequence for regularization
+    purposes, normalized such that the average penalty is 1.
+
+    Parameters:
+        p (int): The length of the penalty sequence.
+        lowest_lambda (float, optional): The lowest penalty value in the sequence.
+        Default for lowest_lambda is 2 / (p+1), which is the lowest value
+        after normalizing sequence 1,2, ..., p.
+
+    Returns:
+        array_like: Array of linearly decreasing penalty values.
+    """
+    if lowest_lambda is None:
+        lowest_lambda = 2 / (p+1)
+    c = 2*(1-lowest_lambda)/(p-1)
+    return np.flip(c*np.arange(0, p)) + lowest_lambda
 
 
 def bh_lambdas(p, q=0.05):

@@ -198,9 +198,9 @@ def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas_low, n=None, t=None, tol=1e-4,
         Number of steps before termination. Default is None.
     tol : float, optional
         Tolerance level for termination based on the norm between consecutive iterates.
-        Default is 1e-6.
+        Default is 1e-4.
     max_iter : int, optional
-        Maximum number of iterations. Default is 1000.
+        Maximum number of iterations. Default is 2000.
 
     Returns
     -------
@@ -215,7 +215,7 @@ def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas_low, n=None, t=None, tol=1e-4,
     if t==None:
         t = 1/np.max(np.linalg.eigvals(C))  # default stepsize = 1/max(eigenvalues of C) to guarantee O(1/n^2) convergence
         #t = np.float32(t) #np.real(t)
-        t=np.float32(np.real(t))
+        t = np.float32(np.real(t))
     stepsize_t = t #np.float32(t)
     #u_k=np.zeros(len(vechTheta0))
     if n is None:
@@ -240,7 +240,7 @@ def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas_low, n=None, t=None, tol=1e-4,
                 break
             elif k == max_iter - 1:
                 print('Warning: Maximum number of iterations', max_iter, ' reached. Convergence of FISTA is slow. The stepsize 1/max(eigenvalues of C) = ', stepsize_t ,' might be too small. Also, Theta0 might be close to singular.')
-    print('final_iter:', k)  # uncomment line for final iterate
+    #print('final_iter:', k)  # uncomment line for final iterate
     return u_k
 
 
@@ -702,7 +702,7 @@ np.set_printoptions(threshold=np.inf)
 Sigma9 = comp_sym_corr(0.1, 9)
 Theta9 = np.linalg.inv(Sigma9)
 print('Theta9:\n', np.round(Theta9, 2))
-print('stepsize in FISTA:\n', 1/max(np.linalg.eigvals(Hessian(Sigma9))))
+#print('stepsize in FISTA:\n', 1/max(np.linalg.eigvals(Hessian(Sigma9))))
 #plot_gperformance(Theta0=Theta9, lambdas_low=lin_lambdas(9 * 8 / 2), x=np.linspace(0, 2, 7), patMSE=True, n=100, tol=1e-4, smooth=True) #G # rho=0.1 SLOPE beats Lasso
 #plot_gperformance(Theta0=Theta9, lambdas_low=bh_lambdas(9*8/2, q=0.9), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # BH does not improve linear sequence
 
@@ -710,6 +710,7 @@ Sigma20 = comp_sym_corr(0.1, 20)
 Theta20 = np.linalg.inv(Sigma20)
 #print('Theta20:\n', np.round(Theta20, 2))
 #print('eval20:\n', 1/max(np.linalg.eigvals(Hessian(Sigma20))))
+
 #plot_gperformance(Theta0=Theta20, lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 2, 5), patMSE=True, n=50, smooth=True) # rho=0.1 SLOPE beats Lasso
 #plot_gperformance(Theta0=Theta20, lambdas_low=bh_lambdas(20*19/2, 0.5), x=np.linspace(0, 2, 5), patMSE=True, n=10, smooth=True) # bh not better than linear sequence
 
@@ -719,12 +720,12 @@ Theta20 = np.linalg.inv(Sigma20)
 # 20x20 block matrix consisting of two 10x10 compound symmetric blocks
 Sigma20_block = np.block([[comp_sym_corr(0.2,10), np.zeros((10, 10))], [np.zeros((10, 10)), comp_sym_corr(0.2,10)]])
 print('Theta20_block:\n', np.round(np.linalg.inv(Sigma20_block), 2))
-print('lin_lambdas:\n', lin_lambdas(20*19/2))
-#plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=lin_lambdas(20 * 19 / 2), x=np.linspace(0, 2, 7), patMSE=True, n=300, smooth=True, tol=1e-4)
+print('lin_lambdas:\n', lin_lambdas(20*19/2, lowest_lambda=1))
+plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=lin_lambdas(20 * 19 / 2, lowest_lambda=1), x=np.linspace(0, 2, 7), patMSE=True, n=200, smooth=True, tol=1e-4)
 
 print('bh_lambdas0.05:\n', bh_lambdas(20*19/2, 0.05))
 print('bh_lambdas0.5:\n', bh_lambdas(20*19/2, 0.5))
-#plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20 * 19 / 2, 0.5), x=np.linspace(0, 2, 7), patMSE=True, n=200, smooth=True, tol=1e-4) # rho 0.2 SLOPE beats Lasso
+plot_gperformance(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20 * 19 / 2, 0.5), x=np.linspace(0, 2, 7), patMSE=True, n=200, smooth=True, tol=1e-4) # rho 0.2 SLOPE beats Lasso
 
 my_lambdas = np.ones(int(20*19/2))
 my_lambdas[0] = my_lambdas[0] + 10
@@ -735,10 +736,10 @@ print('my_lambdas:\n', my_lambdas)
 
 
 # Pattern recovery
-plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 15
-plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.05), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 22
-plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.5), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 10
-plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 15
+#plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=lin_lambdas(20*19/2), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 15
+#plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.05), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 22
+#plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=bh_lambdas(20*19/2, 0.5), x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 10
+#plot_pattern_recovery(Theta0=np.linalg.inv(Sigma20_block), lambdas_low=my_lambdas, x=np.linspace(0, 25, 6), n=20, smooth=True) # recovers at 15
 
 
 '''
