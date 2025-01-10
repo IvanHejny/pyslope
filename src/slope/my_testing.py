@@ -56,17 +56,21 @@ beta4no0rev = np.array([3, 2, 2, 1])
 beta4no0r = np.array([1, 1, 2, 2])
 beta4paper = np.array([1, 2, 2, 3])
 
+
+
+
 #beta = np.array([1, 2, 2, 3])
-#beta= np.array([1, 2, 2, 3, 3, 2, 2, 1])
-beta= np.array([1, 2, 2, 2, 2, 3])
+beta= np.array([1, 2, 2, 3, 3, 2, 2, 1])
+#beta= np.array([1, 2, 2, 2, 2, 3])
 p=len(beta)
 A = Acustom(a=np.zeros(p), b=np.ones(p))
 print('A', A)
 
-print(glasso_sampler(C=np.identity(p), A=A, beta0=beta, lambdas=400)) #Fused Lasso fails to recover monotonic clusters
+print(glasso_sampler(C=np.identity(p), A=A, beta0=beta, lambdas=10)) #Fused Lasso fails to recover monotonic clusters
 Acon= Aconcave(p, curvature=0.2, cluster_scaling=1, sparsity=False)
 print('Aconcave', Acon)
-print(glasso_sampler(C=np.identity(p), A=Acon, beta0=beta, lambdas=400)) #Concavified Fused Lasso recovers all clusters
+print(glasso_sampler(C=np.identity(p), A=Acon, beta0=beta, lambdas=10)) #Concavified Fused Lasso recovers all clusters
+
 
 '''
 beta5 = np.array([1, 1, 3, 4, 4])

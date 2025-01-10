@@ -109,7 +109,9 @@ def Acustom(a , b): # a: sparsity penalty, b: clustering penalty
         normalization = np.sum(A)
     return A
 
+#Concavified Fused Lasso penalty matrix
 def Aconcave(p, curvature=0.05, cluster_scaling=1, sparsity = True):
+    # curvature: level of concavification , cluster_scaling: clustering strength,  sparsity: False if there is no sparsity penalty
     cluster_penalty = cluster_scaling * np.array([1 + curvature * i * (p - i) for i in range(1, p)])
     if sparsity:
         return Acustom(a=np.ones(p), b=cluster_penalty)
