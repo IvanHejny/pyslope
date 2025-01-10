@@ -26,7 +26,7 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic e
         glasso_sample = admm_glasso(C, A, W, beta0, lambdas, iter)
         #print('glasso_sol:', np.round(glasso_sample, 3))
         print('glasso_sol:', pattern(np.round(glasso_sample, 2)))
-        #print('glasso_sol:', np.round(glasso_sample, 2))
+
 
 #alpha = 0.7
 #C2 = np.array([[1, alpha], [alpha, 1]])
@@ -54,8 +54,21 @@ beta4m2 = np.array([2, 0, 1, 1])  #
 beta4no0 = np.array([1, 2, 2, 3])
 beta4no0rev = np.array([3, 2, 2, 1])
 beta4no0r = np.array([1, 1, 2, 2])
-beta4test = np.array([1, 2, 2, 3])
+beta4paper = np.array([1, 2, 2, 3])
 
+#beta = np.array([1, 2, 2, 3])
+#beta= np.array([1, 2, 2, 3, 3, 2, 2, 1])
+beta= np.array([1, 2, 2, 2, 2, 3])
+p=len(beta)
+A = Acustom(a=np.zeros(p), b=np.ones(p))
+print('A', A)
+
+print(glasso_sampler(C=np.identity(p), A=A, beta0=beta, lambdas=400)) #Fused Lasso fails to recover monotonic clusters
+Acon= Aconcave(p, curvature=0.2, cluster_scaling=1, sparsity=False)
+print('Aconcave', Acon)
+print(glasso_sampler(C=np.identity(p), A=Acon, beta0=beta, lambdas=400)) #Concavified Fused Lasso recovers all clusters
+
+'''
 beta5 = np.array([1, 1, 3, 4, 4])
 beta5r = np.array([3, 2, 1, 1, 0])
 beta7 = np.array([1, 1, 2, 2, 3, 4, 4])
@@ -78,16 +91,17 @@ b = np.array([1, 1.15, 1.25, 1.3, 1.3, 1.25, 1.15, 1])  # np.array([1, 1, 1.2, 1
 blog = np.array([np.log(2), np.log(3), np.log(4), np.log(5), np.log(6), np.log(7), np.log(8), np.log(9)])
 bconst = np.array([1, 1, 1, 1, 1, 1, 1, 1])
 #  for beta8 illustrative penalty np.array([np.log(2), np.log(3), 0.1*np.log(4), np.log(5), np.log(6), 2/3*np.log(6), 1/3*np.log(6), np.log(9)])
-print('blog:', blog)
+#print('blog:', blog)
 #log_vector = lambda p: np.array([np.log(i) for i in range(2, p+1)])
-bump_quadratic = lambda curvature, p: np.array([curvature*i*(p-i) for i in range(1, p)])
-print('bump_quadratic:', bump_quadratic(5,9))
+#bump_quadratic = lambda curvature, p: np.array([curvature*i*(p-i) for i in range(1, p)])
+#print('bump_quadratic:', bump_quadratic(5,9))
 #print('log_vector:', np.log(np.arange(2, 10)))  #
 #print('log_vector_flip:', np.flip(np.log(np.arange(2, 10))))
 #print('log_bump_vector:', (np.log(np.arange(2, 10)) + np.flip(np.log(np.arange(2, 10))))/2)
-A3Bcustom = Acustom(a=0*2.23*np.ones(3), b=np.array([0.5, 1.1]))
-print('A3Bcustom:\n', A3Bcustom)
-print(glasso_sampler(np.identity(3), A3Bcustom, np.array([-1,-1,2]), 400))
+
+#A3Bcustom = Acustom(a=0*2.23*np.ones(3), b=np.array([0.5, 1.1]))
+#print('A3Bcustom:\n', A3Bcustom)
+#print(glasso_sampler(np.identity(3), A3Bcustom, np.array([-1,-1,2]), 400))
 
 #print(glasso_sampler(np.identity(3), A3Bcustom, beta3bug, 40))
 #A4Bcustom = Acustom(a=2*np.ones(4), b=np.array)
@@ -127,7 +141,7 @@ print('A12bump:\n', np.round(A12Bcustom,3))
 #print('flassoA12:\n', np.round(flassoA12, 3))
 #print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 2]), 400))
 print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 0, 0, 1, 1, 1, 3, 3, 3, 2, 2, 2]), 400))
-#'''
+'''
 
 
 
