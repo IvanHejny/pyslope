@@ -1,5 +1,6 @@
 from src.slope.solvers import*
 from admm_glasso import*
+#from src.slope.graphical_slope import*
 
 #ADMM_GLASSO
 '''
@@ -19,13 +20,19 @@ from admm_glasso import*
 
 
 
-def glasso_sampler(C, A, beta0, lambdas, iter=100, n=20): #sampling asymptotic error from the glasso
+def glasso_sampler(C, A, beta0, lambdas, iter=100, n=500, sigma = 1): #sampling asymptotic error from the glasso
     p = len(beta0)
+    counter = 0 #
     for i in range(n):
         W = np.random.multivariate_normal(np.zeros(p), C)
-        glasso_sample = admm_glasso(C, A, W, beta0, lambdas, iter)
+        glasso_sample = admm_glasso(C, A, sigma*W, beta0, lambdas, iter)
         #print('glasso_sol:', np.round(glasso_sample, 3))
-        print('glasso_sol:', pattern(np.round(glasso_sample, 2)))
+        glasso_pattern = pattern(np.round(glasso_sample, 6))
+        #print('glasso_sol:', glasso_pattern)
+        if glasso_pattern[1]==glasso_pattern[-2]: #only for one long middle cluster
+            counter = counter + 1
+    print('recovery:\n',counter/n)
+
 
 
 #alpha = 0.7
@@ -60,16 +67,17 @@ beta4paper = np.array([1, 2, 2, 3])
 
 
 #beta = np.array([1, 2, 2, 3])
-beta= np.array([1, 2, 2, 3, 3, 2, 2, 1])
-#beta= np.array([1, 2, 2, 2, 2, 3])
+#beta= np.array([1, 2, 2, 3, 3, 2, 2, 1])
+beta= np.array([1, 2, 2, 3])
 p=len(beta)
-A = Acustom(a=np.zeros(p), b=np.ones(p))
+A = Acustom(a=0.2*np.ones(p), b=np.ones(p))
 print('A', A)
 
-print(glasso_sampler(C=np.identity(p), A=A, beta0=beta, lambdas=10)) #Fused Lasso fails to recover monotonic clusters
+print('beta:', beta)
+print(glasso_sampler(C=np.identity(p), A=A, beta0=beta, lambdas=1, sigma = 1, n=1000)) #Fused Lasso fails to recover monotonic clusters
 Acon= Aconcave(p, curvature=0.2, cluster_scaling=1, sparsity=False)
-print('Aconcave', Acon)
-print(glasso_sampler(C=np.identity(p), A=Acon, beta0=beta, lambdas=10)) #Concavified Fused Lasso recovers all clusters
+#print('Aconcave', Acon)
+#print(glasso_sampler(C=np.identity(p), A=Acon, beta0=beta, lambdas=10)) #Concavified Fused Lasso recovers all clusters
 
 
 '''
@@ -479,4 +487,12 @@ b_0_partition = y_partition_by_b_0(b_0_test3, b_0_test3)
 #plot_performance(Theta0=Theta_test, x=np.linspace(0, 1, 10), patMSE=True, Cov=1 ** 2 * Hessian(Sigma4), n=50, smooth=True)
 
 # patMSE for the compound symmeteric matrix should go to zero if the diagonal is not clustered
+'''
+'''
+Theta3 = np.array([[1, 0.5, 0.5], [0.5, 1, 0], [0.5, 0, 1]])
+print('Theta3:\n', Theta3)
+vechTheta3 = mat_to_vech(Theta3)
+print('vechTheta3:', vechTheta3)
+low_vechTheta3 = split_diag_and_low(vechTheta3)[1]
+print('low_vechTheta3:', low_vechTheta3)
 '''

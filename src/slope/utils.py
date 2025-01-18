@@ -104,3 +104,5 @@ def preprocess(X):
         X = StandardScaler().fit_transform(X)
         return X
 
+
+#print('prox_slope', prox_slope(beta=np.array([2,3]), lambdas=np.array([2,3])))

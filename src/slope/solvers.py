@@ -330,8 +330,8 @@ def pgd_slope_b_0_ISTA(C, W, b_0, lambdas, t, n):
        C: np.array
            covariance matrix of the data
        W: np.array
-           p-dimensional vector, in our paper it arises from normal N(0, \sigma^2 * C ),
-           where \sigma^2 is variance of the noise
+           p-dimensional vector, in our paper it arises from normal N(0, sigma^2 * C ),
+           where sigma^2 is variance of the noise
        b_0: np.array
            pattern vector of the true signal
        lambdas : np.array
@@ -364,8 +364,8 @@ def pgd_slope_b_0_FISTA(C, W, b_0, lambdas, n=None, t=None, tol=1e-4, max_iter=2
        C: np.array
            covariance matrix of the data
        W: np.array
-           p-dimensional vector, in our paper it arises from normal N(0, \sigma^2 * C ),
-           where \sigma^2 is variance of the noise
+           p-dimensional vector, in our paper it arises from normal N(0, sigma^2 * C ),
+           where sigma^2 is variance of the noise
        b_0: np.array
            pattern vector of the true signal
        lambdas : np.array
@@ -661,3 +661,5 @@ def band_mat(n, diag_val=1.0, first_off_diag=0.9, second_off_diag=0.8, third_off
         matrix += np.diag(np.full(n - 3, third_off_diag), k=-3)  # k=-3 for third off-diagonal below
 
     return matrix
+
+

@@ -137,8 +137,8 @@ def pgd_gslope_Theta0_ISTA(C, W, Theta0, lambdas, n, t=None):
        C: np.array
            covariance matrix of the data
        W: np.array
-           p-dimensional vector, in our paper it arises from normal N(0, \sigma^2 * C ),
-           where \sigma^2 is variance of the noise
+           p-dimensional vector, in our paper it arises from normal N(0, sigma^2 * C ),
+           where sigma^2 is variance of the noise
        Theta0: np.array
            true precision matrix
        lambdas : np.array
@@ -187,7 +187,7 @@ def pgd_gslope_Theta0_FISTA(C, W, Theta0, lambdas_low, n=None, t=None, tol=1e-4,
         Covariance matrix of the data.
     W : np.array
         p-dimensional vector. In our paper, it arises from a normal distribution
-        N(0, \sigma^2 * C), where \sigma^2 is the variance of the noise.
+        N(0, sigma^2 * C), where sigma^2 is the variance of the noise.
     Theta0 : np.array
         Pattern vector of the true signal.
     lambdas_low : np.array

@@ -166,7 +166,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, Lasso=True, SLOPE=True, fl
 
     if Lasso:
         for i in range(len(x)):
-            resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True, A=x[i]*Acustom(a=np.ones(len(b_0)), b=np.zeros(len(b_0)-1)), tol=tol)
+            resultLasso = patternMSE(b_0=b_0, C=C, Cov=Cov, lambdas=x[i] * lambdas, n=n, genlasso=True, A=x[i]*Acustom(a=np.ones(len(b_0)), b=np.zeros(len(b_0)-1)), tol=tol) #lambdas are irrelevant here, since genlasso=True overrides them with A, yes the code is messy here
             MseLasso = np.append(MseLasso, resultLasso[0])
             PattLasso = np.append(PattLasso, resultLasso[1])
         resultOLS = resultOLS + MseLasso[0]
@@ -232,7 +232,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, Lasso=True, SLOPE=True, fl
         plt.plot(x, MseSLOPE, label='RMSE SLOPE', color='green', lw=1.5, alpha=0.9)
         plt.plot(x, PattSLOPE, label='recovery SLOPE', color='green', linestyle='dashed', lw=1.5)
     if flasso:
-        plt.plot(x, Mseflasso, label='RMSE FLasso', color='orange', lw=1.5, alpha=0.9)
+        plt.plot(x, Mseflasso, label='RMSE FLasso', color='orange', lw=1.5, alpha=0.9) #comment out to supress RMSE FLasso
         plt.plot(x, Pattflasso+0.02, label='recovery FLasso', color='orange', linestyle='dashed', lw=1.5, alpha = 0.8)
     if glasso:
         plt.plot(x, Mseglasso, label='RMSE ConFLasso', color='purple', lw=1.5, alpha=0.9)
@@ -242,7 +242,7 @@ def plot_performance(b_0, C, lambdas, x, n, Cov=None, Lasso=True, SLOPE=True, fl
         plt.scatter(-0.025, reducedOLS[1], color='blue', alpha=0.7, s=70)
         plt.scatter(0, reducedOLS[2], color='orange', alpha=0.7, s=70)
         plt.scatter(0, reducedOLS[3], color='green', alpha=0.7, s=70)
-    plt.scatter(0, resultOLS, color='red', label='RMSE OLS', alpha=0.9, s=70)
+    plt.scatter(0, resultOLS, color='red', label='RMSE OLS', alpha=0.9, s=70) #comment out to supress reducedOLS
 
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
