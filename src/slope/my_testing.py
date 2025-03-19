@@ -1,6 +1,47 @@
 from src.slope.solvers import*
 from admm_glasso import*
-#from src.slope.graphical_slope import*
+# from src.slope.graphical_slope import*
+
+# Low-dim convergence to asymptotic limit
+N = 10 # number of experiments
+n = 1000 # sample size of each experiment
+beta = np.array([2.0, 2.0])  # 2-dimensional vector
+C = np.array([[1, 0], [0, 1]])  # covariance matrix
+sigma = 1
+p = len(beta)
+
+alpha = 0.8
+lambdas = alpha * np.array([0.9, 0.3])  # 2-dimensional vector
+
+mse_n=0
+mse=0
+# Generate data
+for i in range(N):
+    X = np.random.multivariate_normal(np.zeros(p), C, size=n)
+    eps = np.random.multivariate_normal(np.zeros(n), sigma * np.eye(n))
+    y = X @ beta + eps
+    # Compute finite n optimizer u_n_hat = sqrt(n)*(beta_hat - beta)
+    beta_hat = pgd_slope(X, y, lambdas/np.sqrt(n), fit_intercept=False)['beta']
+    #print('beta_hat:', beta_hat)
+    u_n_hat = np.sqrt(n) * (beta_hat - beta)
+    print('u_n_hat:',  u_n_hat)
+    # Compute the asymptotic limit optimizer u_hat
+    W_n = X.T @ eps / np.sqrt(n) # for large n this is approximately N(0, sigma^2 C)
+    u_hat = pgd_slope_b_0_FISTA(C, W_n, beta, lambdas)
+    print('u_hat:', u_hat)
+    mse_n = mse_n + np.linalg.norm(u_n_hat)
+    mse = mse + np.linalg.norm(u_hat)
+    #print('error:', np.linalg.norm(u_hat))
+mse_n = mse_n/N
+rmse_n = np.sqrt(mse_n)
+mse = mse/N
+rmse = np.sqrt(mse)
+print('rmse_n:', rmse_n)
+print('rmse:', rmse)
+
+
+
+
 
 #ADMM_GLASSO
 '''
@@ -19,7 +60,7 @@ from admm_glasso import*
 # covariance matrix
 
 
-
+# Generalized Lasso solution
 def glasso_sampler(C, A, beta0, lambdas, iter=100, n=500, sigma = 1): #sampling asymptotic error from the glasso
     p = len(beta0)
     counter = 0 #
@@ -31,27 +72,30 @@ def glasso_sampler(C, A, beta0, lambdas, iter=100, n=500, sigma = 1): #sampling 
         #print('glasso_sol:', glasso_pattern)
         if glasso_pattern[1]==glasso_pattern[-2]: #only for one long middle cluster
             counter = counter + 1
-    print('recovery:\n',counter/n)
+    print('recovery:', counter/n)
 
 
 
-#alpha = 0.7
-#C2 = np.array([[1, alpha], [alpha, 1]])
-# print(glasso_sampler(C2, AFL(2, a=1.5), beta02, 40))
-# print(glasso_sampler(np.identity(3), AFL(3, a=1.5), beta030, 40))
-#C9_comp = alpha * np.ones(9) + (1-alpha) * np.identity(9)  # compound symmetric covariance matrix
-# print(glasso_sampler(C9_comp, AFL(9), beta09, 40))
-# print(glasso_sampler(np.identity(7), AFL(7, a=1.2), beta07, 40))
-#print(glasso_sampler(np.identity(4), AFLmon(4, b=0.1), beta043, 40))
-#print(glasso_sampler(np.identity(4), AFL(4, 1.1), beta043, 40))
+# Fused Lasso does not recover monotonic clusters, Concavified Lasso does
+'''
+beta= np.array([1, 2, 2, 3])
+p=len(beta)
+A = Acustom(a=0*np.ones(p), b=np.ones(p))
+print('A', A)
+
+print('beta:', beta)
+print('fused lasso:')
+print(glasso_sampler(C=np.identity(p), A=A, beta0=beta, lambdas=10, sigma = 1, n=1000)) #Fused Lasso fails to recover monotonic clusters
+Acon = Aconcave(p, curvature=0.2, cluster_scaling=1, sparsity=False)
+print('Aconcave', Acon)
+print('concavified fused lasso:')
+print(glasso_sampler(C=np.identity(p), A=Acon, beta0=beta, lambdas=10)) #Concavified Fused Lasso recovers all clusters
+'''
 
 
-#print(glasso_sampler(np.identity(7), AFLmon(7,0.1), beta07, 40))
-#print(glasso_sampler(C9_block, AFLmon(9, 0.1), beta09, 40)) # perfect pattern recovery by AFLmon
-#print(glasso_sampler(C9_block, AFLmon(9, 0.1), np.array([1,1,1,0,0,0,2,2,2]), 40)) #reshuffled beta0, no issue
 
-#glasso_sampler test
-#'''
+# Many other Fused Lasso examples
+'''
 beta2 = np.array([1, 0])
 beta3 = np.array([1, 2, 2])  # for p=3, all patterns are recovered by AFLmon(3, a=1.1)
 beta3bug = np.array([1, 20, 20])
@@ -62,25 +106,6 @@ beta4no0 = np.array([1, 2, 2, 3])
 beta4no0rev = np.array([3, 2, 2, 1])
 beta4no0r = np.array([1, 1, 2, 2])
 beta4paper = np.array([1, 2, 2, 3])
-
-
-
-
-#beta = np.array([1, 2, 2, 3])
-#beta= np.array([1, 2, 2, 3, 3, 2, 2, 1])
-beta= np.array([1, 2, 2, 3])
-p=len(beta)
-A = Acustom(a=0.2*np.ones(p), b=np.ones(p))
-print('A', A)
-
-print('beta:', beta)
-print(glasso_sampler(C=np.identity(p), A=A, beta0=beta, lambdas=1, sigma = 1, n=1000)) #Fused Lasso fails to recover monotonic clusters
-Acon= Aconcave(p, curvature=0.2, cluster_scaling=1, sparsity=False)
-#print('Aconcave', Acon)
-#print(glasso_sampler(C=np.identity(p), A=Acon, beta0=beta, lambdas=10)) #Concavified Fused Lasso recovers all clusters
-
-
-'''
 beta5 = np.array([1, 1, 3, 4, 4])
 beta5r = np.array([3, 2, 1, 1, 0])
 beta7 = np.array([1, 1, 2, 2, 3, 4, 4])
@@ -156,7 +181,7 @@ print(glasso_sampler(np.identity(12), A12Bcustom, np.array([0, 0, 0, 1, 1, 1, 3,
 '''
 
 
-
+# further fused lasso testing
 '''
 a5 = 0.1
 a6 = 0.1
@@ -173,7 +198,24 @@ beta9 = np.array([3, 2, -1, -1, 0, 0, 3, 3, 5]) # [-1,-1] is a min cluster, [0,0
 # for monotone zero cluster, the penalties can be anything positive.
 A9custom = np.array([[1, -1, 0, 0, 0, 0, 0, 0, 0], [0, 1, -1, 0, 0, 0, 0, 0, 0], [0, 0, 1, -1, 0, 0, 0, 0, 0], [0, 0, 0, 1, -1, 0, 0, 0, 0], [0, 0, 0, 0, 1, -1, 0, 0, 0], [0, 0, 0, 0, 0, 1, -1, 0, 0], [0, 0, 0, 0, 0, 0, 1, -1, 0], [0, 0, 0, 0, 0, 0, 0, 1, -1], [a1, 0, 0, 0, 0, 0, 0, 0, 0], [0, a2, 0, 0, 0, 0, 0, 0, 0], [0, 0, a3, 0, 0, 0, 0, 0, 0], [0, 0, 0, a4, 0, 0, 0, 0, 0], [0, 0, 0, 0, a5, 0, 0, 0, 0], [0, 0, 0, 0, 0, a6, 0, 0, 0], [0, 0, 0, 0, 0, 0, a7, 0, 0], [0, 0, 0, 0, 0, 0, 0, a8, 0], [0, 0, 0, 0, 0, 0, 0, 0, a9]])
 #print(glasso_sampler(np.identity(9), A9custom, beta9, 40))
+
+#alpha = 0.7
+#C2 = np.array([[1, alpha], [alpha, 1]])
+# print(glasso_sampler(C2, AFL(2, a=1.5), beta02, 40))
+# print(glasso_sampler(np.identity(3), AFL(3, a=1.5), beta030, 40))
+#C9_comp = alpha * np.ones(9) + (1-alpha) * np.identity(9)  # compound symmetric covariance matrix
+# print(glasso_sampler(C9_comp, AFL(9), beta09, 40))
+# print(glasso_sampler(np.identity(7), AFL(7, a=1.2), beta07, 40))
+#print(glasso_sampler(np.identity(4), AFLmon(4, b=0.1), beta043, 40))
+#print(glasso_sampler(np.identity(4), AFL(4, 1.1), beta043, 40))
+
+
+#print(glasso_sampler(np.identity(7), AFLmon(7,0.1), beta07, 40))
+#print(glasso_sampler(C9_block, AFLmon(9, 0.1), beta09, 40)) # perfect pattern recovery by AFLmon
+#print(glasso_sampler(C9_block, AFLmon(9, 0.1), np.array([1,1,1,0,0,0,2,2,2]), 40)) #reshuffled beta0, no issue
+
 '''
+
 
 #testing if admm lasso = pgd lasso, sanity check! Works fine
 '''
