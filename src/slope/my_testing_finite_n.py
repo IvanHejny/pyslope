@@ -4,9 +4,9 @@ from src.slope.solvers import*
 
 
 # Constants
-N = 100  # Number of experiments
+N = 2000  # Number of experiments
 n = 1000  # Largest sample size per experiment
-n_values = [50, 500, n]  # Different sample sizes (n1, n2, n3, n)
+n_values = [100, 500, n]  # Different sample sizes (n1, n2, n3, n)
 beta = np.array([2.0, 2.0])  # 2-dimensional vector
 C = np.array([[1, 0], [0, 1]])  # Covariance matrix
 sigma = 1
@@ -30,7 +30,7 @@ for _ in range(N):
         for idx, alpha in enumerate(alphas):
             lambdas = alpha * np.array([0.9, 0.3])  # Regularization parameter
 
-            beta_hat = pgd_slope(X, y, lambdas / np.sqrt(n_val), fit_intercept=False, gap_tol=1e-4, max_it=1000)['beta']
+            beta_hat = pgd_slope(X, y, lambdas / np.sqrt(n_val), fit_intercept=False, gap_tol=1e-3, max_it=1000)['beta']
             u_n_hat = np.sqrt(n_val) * (beta_hat - beta)
             rmse_dict[n_val][idx] += np.linalg.norm(u_n_hat) ** 2
 
@@ -50,7 +50,7 @@ rmse = np.sqrt(rmse / N)
 plt.figure(figsize=(8, 6))
 for n_val in n_values:
     plt.plot(alphas, rmse_dict[n_val], label=f"RMSE (n={n_val})", marker='o')
-plt.plot(alphas, rmse, label="RMSE (full)", marker='o')
+plt.plot(alphas, rmse, label="RMSE $n=\infty$", marker='o')
 plt.xlabel(r"$\alpha$")
 plt.ylabel("RMSE")
 plt.legend()
